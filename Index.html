@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FluxoApp — Painel Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #C9A84C;
+  --gold-light: #E8C96A;
+  --gold-dim: rgba(201,168,76,0.15);
+  --bg: #0A0A0C;
+  --bg2: #111114;
+  --bg3: #18181D;
+  --border: rgba(201,168,76,0.18);
+  --text: #F0EDE8;
+  --text-dim: #7A7870;
+  --green: #22C55E;
+  --red: #EF4444;
+  --blue: #3B82F6;
+  --orange: #F97316;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── SETUP SCREEN ── */
+#setupScreen {
+  min-height: 100vh;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+}
+.setup-box {
+  background: var(--bg2);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+}
+.setup-icon { font-size: 48px; margin-bottom: 16px; }
+.setup-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.setup-msg { font-size: 14px; color: var(--text-dim); line-height: 1.6; margin-bottom: 24px; }
+.setup-step {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  text-align: left;
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.setup-step strong { color: var(--gold); }
+.setup-step code {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  background: rgba(201,168,76,0.1);
+  color: var(--gold);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ── LOGIN ── */
+#loginScreen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+#loginScreen::before {
+  content: '';
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+  top: -100px; left: -100px;
+  pointer-events: none;
+}
+#loginScreen::after {
+  content: '';
+  position: absolute;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 70%);
+  bottom: -50px; right: -50px;
+  pointer-events: none;
+}
+.login-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  z-index: 1;
+}
+.login-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+.login-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 36px; }
+.field-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.field-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 20px;
+}
+.field-input:focus { border-color: var(--gold); }
+.btn-primary {
+  width: 100%;
+  background: var(--gold);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  letter-spacing: 0.02em;
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:active { transform: scale(0.99); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.login-error {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #FCA5A5;
+  margin-bottom: 16px;
+  display: none;
+}
+
+/* ── LAYOUT PRINCIPAL ── */
+#app { display: none; min-height: 100vh; }
+
+.sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 240px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  padding: 24px 16px;
+}
+.sidebar-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--gold);
+  padding: 0 8px;
+  margin-bottom: 32px;
+}
+.sidebar-logo span {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text-dim);
+  display: block;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  transition: all 0.15s;
+  margin-bottom: 2px;
+}
+.nav-item:hover { background: var(--gold-dim); color: var(--text); }
+.nav-item.active { background: var(--gold-dim); color: var(--gold); }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.admin-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg3);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.admin-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; color: #000;
+  flex-shrink: 0;
+}
+.admin-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.admin-role { font-size: 10px; color: var(--text-dim); }
+.btn-logout {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  color: var(--text-dim);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+.main-content {
+  margin-left: 240px;
+  min-height: 100vh;
+  background: var(--bg);
+}
+.page-header {
+  padding: 28px 32px 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.page-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; }
+.page-body { padding: 28px 32px; }
+
+/* ── PÁGINAS ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── CARDS DE STATS ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 80px; height: 80px;
+  background: radial-gradient(circle, var(--gold-dim) 0%, transparent 70%);
+}
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-value.gold { color: var(--gold); }
+.stat-value.green { color: var(--green); }
+.stat-value.red { color: var(--red); }
+.stat-change { font-size: 11px; color: var(--text-dim); }
+
+/* ── TABELA ── */
+.table-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.table-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+.table-actions { display: flex; gap: 8px; }
+.btn-sm {
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  transition: opacity 0.15s;
+}
+.btn-sm:hover { opacity: 0.85; }
+.btn-gold { background: var(--gold); color: #000; }
+.btn-outline { background: transparent; border: 1px solid var(--border) !important; color: var(--text-dim); }
+.btn-outline:hover { border-color: var(--gold) !important; color: var(--gold); }
+.btn-red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3) !important; }
+.btn-green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3) !important; }
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.search-input {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  flex: 1;
+  transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--gold); }
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+}
+tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.1s;
+}
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+tbody tr:last-child { border-bottom: none; }
+td { padding: 12px 16px; font-size: 13px; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-green { background: rgba(34,197,94,0.12); color: var(--green); }
+.badge-red { background: rgba(239,68,68,0.12); color: var(--red); }
+.badge-gold { background: rgba(201,168,76,0.12); color: var(--gold); }
+.badge-blue { background: rgba(59,130,246,0.12); color: var(--blue); }
+.badge-gray { background: rgba(255,255,255,0.06); color: var(--text-dim); }
+.badge-orange { background: rgba(249,115,22,0.12); color: var(--orange); }
+
+.user-cell { display: flex; align-items: center; gap: 10px; }
+.user-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--gold-dim);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px; color: var(--gold);
+  flex-shrink: 0;
+}
+.user-name { font-weight: 500; }
+.user-email { font-size: 11px; color: var(--text-dim); }
+
+.action-btns { display: flex; gap: 6px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 460px;
+  padding: 28px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.modal-sub { font-size: 12px; color: var(--text-dim); margin-bottom: 24px; }
+.modal-footer { display: flex; gap: 10px; margin-top: 24px; }
+.modal-footer .btn-primary { flex: 1; }
+
+/* ── CUPONS ── */
+.coupon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.coupon-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  position: relative;
+}
+.coupon-card::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 40%;
+  background: var(--gold);
+  border-radius: 0 2px 2px 0;
+}
+.coupon-code {
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.coupon-desc { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
+.coupon-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.coupon-uses { font-size: 11px; color: var(--text-dim); }
+
+/* ── LOADING ── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: var(--text-dim);
+  font-size: 13px;
+  gap: 10px;
+}
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 13px;
+  z-index: 9999;
+  transition: all 0.3s;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+#toast.success { border-color: rgba(34,197,94,0.4); color: var(--green); }
+#toast.error { border-color: rgba(239,68,68,0.4); color: var(--red); }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-dim);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+.empty-text { font-size: 14px; }
+
+/* ── SELECT ── */
+select.field-input {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A7870' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+select.field-input option { background: #18181D; }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--bg3); border-radius: 10px; padding: 4px; }
+.tab-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+.tab-btn.active { background: var(--bg2); color: var(--text); }
+
+/* ── SECTION HEADER ── */
+.section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  padding: 0 8px;
+  margin-bottom: 6px;
+  margin-top: 12px;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .coupon-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- TELA DE SETUP (aparece se o appId web não foi configurado) -->
+<div id="setupScreen">
+  <div class="setup-box">
+    <div class="setup-icon">⚙️</div>
+    <div class="setup-title">Configuração necessária</div>
+    <div class="setup-msg">
+      O painel está usando o App ID do Android. Você precisa registrar um <strong style="color:var(--gold)">Web App</strong> no Firebase para o painel funcionar.<br><br>
+      Siga os passos abaixo:
+    </div>
+    <div class="setup-step">
+      <strong>1. Acesse o Firebase Console</strong><br>
+      Vá em <code>console.firebase.google.com</code> → Projeto <code>fluxoapp-painel</code>
+    </div>
+    <div class="setup-step">
+      <strong>2. Adicione um Web App</strong><br>
+      Clique em ⚙️ Configurações do projeto → Seus apps → Botão <code>&lt;/&gt;</code> (Web)
+    </div>
+    <div class="setup-step">
+      <strong>3. Copie o firebaseConfig</strong><br>
+      Registre o app (nome: "Painel Admin") → copie o objeto <code>firebaseConfig</code> → cole no lugar indicado no código deste arquivo (linha ~530)
+    </div>
+    <div class="setup-step">
+      <strong>4. Crie o usuário admin</strong><br>
+      No Firebase Console → Authentication → Users → Adicionar usuário → informe email e senha do admin
+    </div>
+    <div class="setup-step">
+      <strong>5. Configure as Regras do Firestore</strong><br>
+      Firestore → Rules → cole as regras do arquivo <code>firestore.rules</code> → Publicar
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">⚡ FluxoApp</div>
+    <div class="login-sub">Painel de Administração</div>
+    <div class="login-error" id="loginError"></div>
+    <div class="field-label">Email</div>
+    <input class="field-input" type="email" id="loginEmail" placeholder="admin@fluxoapp.com">
+    <div class="field-label">Senha</div>
+    <input class="field-input" type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+    <button class="btn-primary" id="btnEntrar" onclick="fazerLogin()">Entrar no Painel</button>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">⚡ FluxoApp<span>Admin Panel</span></div>
+    <div class="section-label">Navegação</div>
+    <div class="nav-item active" onclick="irPara('dashboard')">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="irPara('usuarios')">
+      <span class="nav-icon">👥</span> Usuários
+    </div>
+    <div class="nav-item" onclick="irPara('cupons')">
+      <span class="nav-icon">🎟️</span> Cupons
+    </div>
+    <div class="nav-item" onclick="irPara('receita')">
+      <span class="nav-icon">💰</span> Receita
+    </div>
+    <div class="sidebar-footer">
+      <div class="admin-badge">
+        <div class="admin-avatar" id="adminAvatar">A</div>
+        <div>
+          <div class="admin-name" id="adminName">Admin</div>
+          <div class="admin-role">Administrador</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="fazerLogout()">Sair da conta</button>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO -->
+  <div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Visão geral do FluxoApp em tempo real</div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total de Usuários</div>
+            <div class="stat-value gold" id="statTotal">—</div>
+            <div class="stat-change">cadastrados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Assinantes Ativos</div>
+            <div class="stat-value green" id="statAtivos">—</div>
+            <div class="stat-change">plano pago ativo</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Em Trial</div>
+            <div class="stat-value" id="statTrial">—</div>
+            <div class="stat-change">período gratuito</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Expirados / Bloqueados</div>
+            <div class="stat-value red" id="statExpirados">—</div>
+            <div class="stat-change">sem acesso</div>
+          </div>
+        </div>
+
+        <!-- Recentes -->
+        <div class="table-card">
+          <div class="table-header">
+            <div class="table-title">Usuários Recentes</div>
+            <button class="btn-sm btn-outline" onclick="irPara('usuarios')">Ver todos</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Plano</th>
+                <th>Status</th>
+                <th>Cadastro</th>
+                <th>Expira em</th>
+              </tr>
+            </thead>
+            <tbody id="recentesBody">
+              <tr><td colspan="5"><div class="loading"><div class="spinner"></div> Carregando...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div class="page" id="page-usuarios">
+      <div class="page-header">
+        <div class="page-title">Usuários</div>
+        <div class="page-sub">Gerencie todos os usuários do FluxoApp</div>
+      </div>
+      <div class="page-body">
+        <div class="tabs">
+          <button class="tab-btn active" onclick="filtrarUsuarios('todos')">Todos</button>
+          <button class="tab-btn" onclick="filtrarUsuarios('trial')">Trial</button>
+          <button class="tab-btn" onclick="filtrarUsuarios('ativo')">Ativos</button>
+          <button class="tab-btn" onclick="filtrarUsuarios('expirado')">Expirados</button>
+          <button class="tab-btn" onclick="filtrarUsuarios('bloqueado')">Bloqueados</button>
+        </div>
+
+        <div class="table-card">
+          <div class="search-bar">
+            <input class="search-input" type="text" placeholder="🔍 Buscar por nome, email..." id="searchUsuarios" oninput="buscarUsuario()">
+            <button class="btn-sm btn-gold" onclick="abrirModalNovoUsuario()">+ Adicionar</button>
+            <button class="btn-sm btn-outline" onclick="carregarUsuarios()">↻ Atualizar</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Plano</th>
+                <th>Status</th>
+                <th>Dias Restantes</th>
+                <th>Cadastro</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="usuariosBody">
+              <tr><td colspan="6"><div class="loading"><div class="spinner"></div> Carregando usuários...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUPONS -->
+    <div class="page" id="page-cupons">
+      <div class="page-header">
+        <div class="page-title">Cupons & Promoções</div>
+        <div class="page-sub">Crie e gerencie códigos de acesso</div>
+      </div>
+      <div class="page-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div style="font-size:13px; color:var(--text-dim);" id="cuponsCount">Carregando...</div>
+          <button class="btn-sm btn-gold" onclick="abrirModalCupom()">+ Novo Cupom</button>
+        </div>
+        <div class="coupon-grid" id="cuponsGrid">
+          <div class="loading"><div class="spinner"></div> Carregando cupons...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECEITA -->
+    <div class="page" id="page-receita">
+      <div class="page-header">
+        <div class="page-title">Receita & Financeiro</div>
+        <div class="page-sub">Análise financeira do FluxoApp</div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" style="grid-template-columns: repeat(3,1fr);">
+          <div class="stat-card">
+            <div class="stat-label">Receita Estimada / Mês</div>
+            <div class="stat-value green" id="receitaMes">R$ —</div>
+            <div class="stat-change">assinantes × R$4,99</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Assinantes Pagos</div>
+            <div class="stat-value gold" id="receitaQtd">—</div>
+            <div class="stat-change">mensal + trimestral + anual</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Em Conversão (Trial)</div>
+            <div class="stat-value" id="receitaTrial">—</div>
+            <div class="stat-change">potenciais clientes</div>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header">
+            <div class="table-title">Distribuição por Plano</div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Plano</th><th>Usuários</th><th>Receita/Mês</th><th>%</th></tr>
+            </thead>
+            <tbody id="receitaBody">
+              <tr><td colspan="4"><div class="loading"><div class="spinner"></div> Calculando...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main-content -->
+</div><!-- end app -->
+
+<!-- MODAL EDITAR USUÁRIO -->
+<div class="modal-overlay" id="modalUsuario">
+  <div class="modal">
+    <div class="modal-title" id="modalUsuarioTitle">Editar Usuário</div>
+    <div class="modal-sub" id="modalUsuarioSub">Altere os dados de acesso do usuário</div>
+
+    <input type="hidden" id="editUid">
+    <div class="field-label">Nome</div>
+    <input class="field-input" type="text" id="editNome" placeholder="Nome do usuário">
+    <div class="field-label">Email</div>
+    <input class="field-input" type="email" id="editEmail" placeholder="email@exemplo.com" readonly style="opacity:0.6">
+    <div class="field-label">Plano</div>
+    <select class="field-input" id="editPlano">
+      <option value="trial">Trial (7 dias)</option>
+      <option value="mensal">Mensal</option>
+      <option value="trimestral">Trimestral</option>
+      <option value="anual">Anual</option>
+      <option value="promo">Promo / Vitalício</option>
+      <option value="bloqueado">Bloqueado</option>
+    </select>
+    <div class="field-label">Status</div>
+    <select class="field-input" id="editStatus">
+      <option value="ativo">Ativo</option>
+      <option value="expirado">Expirado</option>
+      <option value="bloqueado">Bloqueado</option>
+    </select>
+    <div class="field-label">Nova data de expiração</div>
+    <input class="field-input" type="date" id="editExpiracao">
+    <div class="field-label">Código promo usado</div>
+    <input class="field-input" type="text" id="editCodigoPromo" placeholder="Deixe em branco se não houver" style="font-family:'DM Mono',monospace">
+
+    <div class="modal-footer">
+      <button class="btn-sm btn-outline" style="padding:12px 20px; border-radius:10px;" onclick="fecharModal('modalUsuario')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarUsuario()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVO CUPOM -->
+<div class="modal-overlay" id="modalCupom">
+  <div class="modal">
+    <div class="modal-title">Novo Cupom</div>
+    <div class="modal-sub">Crie um código de acesso ou desconto</div>
+
+    <div class="field-label">Código do Cupom</div>
+    <input class="field-input" type="text" id="cupomCodigo" placeholder="Ex: AMIGO30" style="font-family:'DM Mono',monospace; text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+
+    <div class="field-label">Tipo</div>
+    <select class="field-input" id="cupomTipo" onchange="atualizarCamposCupom()">
+      <option value="dias_gratis">Dias Grátis</option>
+      <option value="desconto">Desconto %</option>
+      <option value="vitalicio">Acesso Vitalício</option>
+    </select>
+
+    <div id="cupomDiasField">
+      <div class="field-label">Quantidade de Dias</div>
+      <input class="field-input" type="number" id="cupomDias" placeholder="Ex: 30" min="1">
+    </div>
+    <div id="cupomDescontoField" style="display:none">
+      <div class="field-label">Desconto (%)</div>
+      <input class="field-input" type="number" id="cupomDesconto" placeholder="Ex: 50" min="1" max="100">
+    </div>
+
+    <div class="field-label">Limite de Usos (0 = ilimitado)</div>
+    <input class="field-input" type="number" id="cupomLimite" placeholder="Ex: 10" min="0">
+
+    <div class="field-label">Válido até</div>
+    <input class="field-input" type="date" id="cupomValidade">
+
+    <div class="field-label">Descrição (opcional)</div>
+    <input class="field-input" type="text" id="cupomDescricao" placeholder="Ex: Cupom para amigos beta testers">
+
+    <div class="modal-footer">
+      <button class="btn-sm btn-outline" style="padding:12px 20px; border-radius:10px;" onclick="fecharModal('modalCupom')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarCupom()">Criar Cupom</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     FIREBASE — CONFIGURAÇÃO
+     
+     ⚠️  O appId abaixo é do APP ANDROID e NÃO funciona para Web.
+     
+     Para corrigir:
+       1. Firebase Console → Configurações do projeto → Seus apps
+       2. Clique no botão </> (Web) → "Adicionar app"
+       3. Nome: "Painel Admin" → Registrar
+       4. Copie o objeto firebaseConfig gerado
+       5. Substitua o firebaseConfig abaixo pelo que você copiou
+          (só mude o appId — o resto é o mesmo)
+     ═══════════════════════════════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc,
+         query, orderBy, limit, where, Timestamp, addDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ══════════════════════════════════════════════════════════════════
+// ⚠️  SUBSTITUA o appId abaixo pelo appId do SEU WEB APP
+//     (os outros campos já estão corretos)
+// ══════════════════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "AIzaSyBYbvJlCh-NRIBCGwSfqpYhE19_7zbsyPo",
+  authDomain:        "fluxoapp-painel.firebaseapp.com",
+  projectId:         "fluxoapp-painel",
+  storageBucket:     "fluxoapp-painel.firebasestorage.app",
+  messagingSenderId: "342331386113",
+  appId:             "1:342331386113:web:2cbb1affa20651b7981300"
+  // Exemplo de como vai ficar:
+  // appId: "1:342331386113:web:abc123def456"
+};
+// ══════════════════════════════════════════════════════════════════
+
+// Detectar se o appId ainda é o placeholder ou o Android ID
+const appIdInvalido = !firebaseConfig.appId ||
+  firebaseConfig.appId === "1:342331386113:web:2cbb1affa20651b7981300" ||
+  firebaseConfig.appId.includes(":android:");
+
+if (appIdInvalido) {
+  document.getElementById('setupScreen').style.display = 'flex';
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+  throw new Error('Configure o appId do Web App primeiro.');
+}
+
+const fbApp  = initializeApp(firebaseConfig);
+const auth   = getAuth(fbApp);
+const db     = getFirestore(fbApp);
+
+// ── Estado global ──
+window._usuarios    = [];
+window._cupons      = [];
+window._filtroAtual = 'todos';
+
+// ── Auth ──
+onAuthStateChanged(auth, user => {
+  if (user) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    const initial = (user.email || 'A')[0].toUpperCase();
+    document.getElementById('adminAvatar').textContent = initial;
+    document.getElementById('adminName').textContent = user.email?.split('@')[0] || 'Admin';
+    carregarTudo();
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+// ── Login / Logout ──
+window.fazerLogin = async () => {
+  const email  = document.getElementById('loginEmail').value.trim();
+  const senha  = document.getElementById('loginPassword').value;
+  const errEl  = document.getElementById('loginError');
+  const btnEl  = document.getElementById('btnEntrar');
+  errEl.style.display = 'none';
+  btnEl.disabled = true;
+  btnEl.textContent = 'Entrando...';
+  try {
+    await signInWithEmailAndPassword(auth, email, senha);
+  } catch(e) {
+    errEl.style.display = 'block';
+    errEl.textContent = traduzirErroAuth(e.code);
+    btnEl.disabled = false;
+    btnEl.textContent = 'Entrar no Painel';
+  }
+};
+window.fazerLogout = async () => {
+  await signOut(auth);
+  toast('Até logo!', 'success');
+};
+
+function traduzirErroAuth(code) {
+  const erros = {
+    'auth/wrong-password':       'Senha incorreta.',
+    'auth/user-not-found':       'Usuário não encontrado.',
+    'auth/invalid-email':        'Email inválido.',
+    'auth/too-many-requests':    'Muitas tentativas. Tente mais tarde.',
+    'auth/invalid-credential':   'Credenciais inválidas. Verifique email e senha.',
+    'auth/network-request-failed': 'Sem conexão com a internet.',
+  };
+  return erros[code] || `Erro ao entrar (${code}). Tente novamente.`;
+}
+
+// ── Navegação ──
+window.irPara = (pagina) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + pagina)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.toLowerCase().includes(pagina)) n.classList.add('active');
+  });
+  if (pagina === 'usuarios') renderizarUsuarios();
+  if (pagina === 'cupons')   renderizarCupons();
+  if (pagina === 'receita')  renderizarReceita();
+};
+
+// ── Carregar dados ──
+async function carregarTudo() {
+  await Promise.all([carregarUsuarios(), carregarCupons()]);
+  renderizarDashboard();
+}
+
+window.carregarUsuarios = async () => {
+  try {
+    const snap = await getDocs(query(collection(db, 'users'), orderBy('criadoEm', 'desc')));
+    window._usuarios = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    renderizarUsuarios();
+    renderizarDashboard();
+  } catch(e) {
+    console.error('Erro ao carregar usuários:', e);
+    const msg = e.code === 'permission-denied'
+      ? 'Sem permissão. Verifique as Regras do Firestore (veja firestore.rules).'
+      : 'Erro ao carregar usuários: ' + e.message;
+    toast(msg, 'error');
+    document.getElementById('usuariosBody').innerHTML =
+      `<tr><td colspan="6"><div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">${msg}</div></div></td></tr>`;
+  }
+};
+
+async function carregarCupons() {
+  try {
+    const snap = await getDocs(collection(db, 'cupons'));
+    window._cupons = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderizarCupons();
+  } catch(e) {
+    console.error('Erro ao carregar cupons:', e);
+  }
+}
+
+// ── DASHBOARD ──
+function renderizarDashboard() {
+  const usuarios = window._usuarios;
+  const total  = usuarios.length;
+  const ativos = usuarios.filter(u => (u.plano !== 'trial' && u.plano !== 'bloqueado') && u.status === 'ativo').length;
+  const trial  = usuarios.filter(u => u.plano === 'trial' && u.status === 'ativo').length;
+  const exp    = usuarios.filter(u => u.status === 'expirado' || u.status === 'bloqueado' || u.plano === 'bloqueado').length;
+
+  document.getElementById('statTotal').textContent     = total;
+  document.getElementById('statAtivos').textContent    = ativos;
+  document.getElementById('statTrial').textContent     = trial;
+  document.getElementById('statExpirados').textContent = exp;
+
+  const recentes = usuarios.slice(0, 8);
+  document.getElementById('recentesBody').innerHTML = recentes.length === 0
+    ? '<tr><td colspan="5"><div class="empty"><div class="empty-icon">👥</div><div class="empty-text">Nenhum usuário ainda</div></div></td></tr>'
+    : recentes.map(u => `
+        <tr>
+          <td><div class="user-cell">
+            <div class="user-avatar">${(u.nome||u.email||'?')[0].toUpperCase()}</div>
+            <div><div class="user-name">${u.nome || '—'}</div><div class="user-email">${u.email || '—'}</div></div>
+          </div></td>
+          <td>${badgePlano(u.plano)}</td>
+          <td>${badgeStatus(u.status, u.plano)}</td>
+          <td style="font-size:12px; color:var(--text-dim)">${formatarData(u.criadoEm)}</td>
+          <td style="font-size:12px;">${formatarExpiracao(u.dataExpiracao)}</td>
+        </tr>`).join('');
+}
+
+// ── USUÁRIOS ──
+window.filtrarUsuarios = (filtro) => {
+  window._filtroAtual = filtro;
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['todos','trial','ativo','expirado','bloqueado'][i] === filtro);
+  });
+  renderizarUsuarios();
+};
+
+window.buscarUsuario = () => renderizarUsuarios();
+
+function renderizarUsuarios() {
+  const q      = (document.getElementById('searchUsuarios')?.value || '').toLowerCase();
+  const filtro = window._filtroAtual;
+  const lista  = window._usuarios.filter(u => {
+    const matchQ = !q || (u.nome||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q);
+    if (!matchQ) return false;
+    if (filtro === 'todos')     return true;
+    if (filtro === 'trial')     return u.plano === 'trial';
+    if (filtro === 'ativo')     return u.status === 'ativo' && u.plano !== 'trial' && u.plano !== 'bloqueado';
+    if (filtro === 'expirado')  return u.status === 'expirado';
+    if (filtro === 'bloqueado') return u.status === 'bloqueado' || u.plano === 'bloqueado';
+    return true;
+  });
+
+  const tbody = document.getElementById('usuariosBody');
+  if (lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Nenhum usuário encontrado</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(u => {
+    const dias    = diasRestantes(u.dataExpiracao);
+    const diasStr = dias === 9999
+      ? '∞ Vitalício'
+      : dias > 0
+        ? `${dias} dias`
+        : '<span style="color:var(--red)">Expirado</span>';
+    return `<tr>
+      <td><div class="user-cell">
+        <div class="user-avatar">${(u.nome||u.email||'?')[0].toUpperCase()}</div>
+        <div><div class="user-name">${u.nome || '—'}</div><div class="user-email">${u.email || '—'}</div></div>
+      </div></td>
+      <td>${badgePlano(u.plano)}</td>
+      <td>${badgeStatus(u.status, u.plano)}</td>
+      <td style="font-size:12px">${diasStr}</td>
+      <td style="font-size:12px; color:var(--text-dim)">${formatarData(u.criadoEm)}</td>
+      <td><div class="action-btns">
+        <button class="btn-sm btn-outline" onclick="abrirModalEditar('${u.uid}')">✏️</button>
+        ${u.status === 'bloqueado' || u.plano === 'bloqueado'
+          ? `<button class="btn-sm btn-green" onclick="desbloquear('${u.uid}')">✅</button>`
+          : `<button class="btn-sm btn-red" onclick="bloquear('${u.uid}')">🚫</button>`}
+        <button class="btn-sm btn-outline" onclick="darDiasExtras('${u.uid}')">+30d</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── EDITAR USUÁRIO ──
+window.abrirModalEditar = (uid) => {
+  const u = window._usuarios.find(x => x.uid === uid);
+  if (!u) return;
+  document.getElementById('editUid').value          = uid;
+  document.getElementById('editNome').value         = u.nome || '';
+  document.getElementById('editEmail').value        = u.email || '';
+  document.getElementById('editEmail').readOnly     = true;
+  document.getElementById('editEmail').style.opacity = '0.6';
+  document.getElementById('editPlano').value        = u.plano || 'trial';
+  document.getElementById('editStatus').value       = u.status || 'ativo';
+  document.getElementById('editCodigoPromo').value  = u.codigoPromo || '';
+  if (u.dataExpiracao) {
+    const d = tsToDate(u.dataExpiracao);
+    if (d) document.getElementById('editExpiracao').value = d.toISOString().split('T')[0];
+  } else {
+    document.getElementById('editExpiracao').value = '';
+  }
+  document.getElementById('modalUsuarioTitle').textContent = 'Editar Usuário';
+  document.getElementById('modalUsuarioSub').textContent   = u.email || uid;
+  document.getElementById('modalUsuario').classList.add('open');
+};
+
+window.abrirModalNovoUsuario = () => {
+  document.getElementById('editUid').value          = '';
+  document.getElementById('editNome').value         = '';
+  document.getElementById('editEmail').value        = '';
+  document.getElementById('editEmail').readOnly     = false;
+  document.getElementById('editEmail').style.opacity = '1';
+  document.getElementById('editPlano').value        = 'trial';
+  document.getElementById('editStatus').value       = 'ativo';
+  document.getElementById('editCodigoPromo').value  = '';
+  document.getElementById('editExpiracao').value    = '';
+  document.getElementById('modalUsuarioTitle').textContent = 'Adicionar Usuário';
+  document.getElementById('modalUsuarioSub').textContent   = 'Cria um documento no Firestore para o usuário';
+  document.getElementById('modalUsuario').classList.add('open');
+};
+
+window.salvarUsuario = async () => {
+  const uid    = document.getElementById('editUid').value;
+  const nome   = document.getElementById('editNome').value.trim();
+  const plano  = document.getElementById('editPlano').value;
+  const status = document.getElementById('editStatus').value;
+  const expStr = document.getElementById('editExpiracao').value;
+  const promo  = document.getElementById('editCodigoPromo').value.trim();
+
+  const dados = { nome, plano, status, atualizadoEm: Timestamp.now() };
+  if (promo) dados.codigoPromo = promo;
+  if (expStr) {
+    dados.dataExpiracao = Timestamp.fromDate(new Date(expStr + 'T23:59:59'));
+  }
+  if (plano === 'promo' && !expStr) {
+    dados.dataExpiracao = null;
+  }
+
+  try {
+    if (uid) {
+      await updateDoc(doc(db, 'users', uid), dados);
+      const idx = window._usuarios.findIndex(u => u.uid === uid);
+      if (idx >= 0) Object.assign(window._usuarios[idx], dados);
+    } else {
+      const email = document.getElementById('editEmail').value.trim();
+      if (!email) { toast('Informe o email', 'error'); return; }
+      dados.email    = email;
+      dados.criadoEm = Timestamp.now();
+      if (!expStr) {
+        const exp = new Date();
+        exp.setDate(exp.getDate() + 7);
+        dados.dataExpiracao = Timestamp.fromDate(exp);
+      }
+      const ref = await addDoc(collection(db, 'users'), dados);
+      window._usuarios.unshift({ uid: ref.id, ...dados });
+    }
+    fecharModal('modalUsuario');
+    renderizarUsuarios();
+    renderizarDashboard();
+    toast('Usuário salvo com sucesso!', 'success');
+  } catch(e) {
+    toast('Erro: ' + e.message, 'error');
+  }
+};
+
+window.bloquear = async (uid) => {
+  if (!confirm('Bloquear este usuário?')) return;
+  try {
+    await updateDoc(doc(db, 'users', uid), { status: 'bloqueado', plano: 'bloqueado', atualizadoEm: Timestamp.now() });
+    const u = window._usuarios.find(x => x.uid === uid);
+    if (u) { u.status = 'bloqueado'; u.plano = 'bloqueado'; }
+    renderizarUsuarios();
+    renderizarDashboard();
+    toast('Usuário bloqueado.', 'success');
+  } catch(e) { toast('Erro: ' + e.message, 'error'); }
+};
+
+window.desbloquear = async (uid) => {
+  try {
+    const exp = new Date();
+    exp.setDate(exp.getDate() + 30);
+    const dados = {
+      status: 'ativo', plano: 'mensal',
+      dataExpiracao: Timestamp.fromDate(exp),
+      atualizadoEm: Timestamp.now()
+    };
+    await updateDoc(doc(db, 'users', uid), dados);
+    const u = window._usuarios.find(x => x.uid === uid);
+    if (u) Object.assign(u, dados);
+    renderizarUsuarios();
+    renderizarDashboard();
+    toast('Usuário desbloqueado com 30 dias.', 'success');
+  } catch(e) { toast('Erro: ' + e.message, 'error'); }
+};
+
+window.darDiasExtras = async (uid) => {
+  const u = window._usuarios.find(x => x.uid === uid);
+  if (!u) return;
+  const atual   = tsToDate(u.dataExpiracao) || new Date();
+  const base    = atual > new Date() ? atual : new Date();
+  const novaExp = new Date(base);
+  novaExp.setDate(novaExp.getDate() + 30);
+  try {
+    const dados = {
+      dataExpiracao: Timestamp.fromDate(novaExp),
+      status: 'ativo',
+      atualizadoEm: Timestamp.now()
+    };
+    await updateDoc(doc(db, 'users', uid), dados);
+    Object.assign(u, dados);
+    renderizarUsuarios();
+    toast('+30 dias adicionados!', 'success');
+  } catch(e) { toast('Erro: ' + e.message, 'error'); }
+};
+
+// ── CUPONS ──
+window.abrirModalCupom = () => {
+  document.getElementById('cupomCodigo').value    = '';
+  document.getElementById('cupomTipo').value      = 'dias_gratis';
+  document.getElementById('cupomDias').value      = '30';
+  document.getElementById('cupomLimite').value    = '0';
+  document.getElementById('cupomValidade').value  = '';
+  document.getElementById('cupomDescricao').value = '';
+  atualizarCamposCupom();
+  document.getElementById('modalCupom').classList.add('open');
+};
+
+window.atualizarCamposCupom = () => {
+  const tipo = document.getElementById('cupomTipo').value;
+  document.getElementById('cupomDiasField').style.display     = tipo === 'dias_gratis' ? 'block' : 'none';
+  document.getElementById('cupomDescontoField').style.display = tipo === 'desconto'    ? 'block' : 'none';
+};
+
+window.salvarCupom = async () => {
+  const codigo = document.getElementById('cupomCodigo').value.trim().toUpperCase();
+  if (!codigo) { toast('Informe o código do cupom', 'error'); return; }
+  const tipo = document.getElementById('cupomTipo').value;
+  const dados = {
+    codigo,
+    tipo,
+    limite:    parseInt(document.getElementById('cupomLimite').value) || 0,
+    usosAtual: 0,
+    descricao: document.getElementById('cupomDescricao').value.trim(),
+    ativo:     true,
+    criadoEm:  Timestamp.now(),
+  };
+  if (tipo === 'dias_gratis') dados.dias     = parseInt(document.getElementById('cupomDias').value) || 30;
+  if (tipo === 'desconto')    dados.desconto = parseInt(document.getElementById('cupomDesconto').value) || 50;
+  const valStr = document.getElementById('cupomValidade').value;
+  if (valStr) dados.validade = Timestamp.fromDate(new Date(valStr));
+
+  try {
+    await setDoc(doc(db, 'cupons', codigo), dados);
+    window._cupons.push({ id: codigo, ...dados });
+    renderizarCupons();
+    fecharModal('modalCupom');
+    toast('Cupom criado: ' + codigo, 'success');
+  } catch(e) { toast('Erro: ' + e.message, 'error'); }
+};
+
+function renderizarCupons() {
+  const grid  = document.getElementById('cuponsGrid');
+  const count = document.getElementById('cuponsCount');
+  const ativos = window._cupons.filter(c => c.ativo !== false);
+  count.textContent = `${ativos.length} cupom(s) ativo(s)`;
+
+  if (window._cupons.length === 0) {
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🎟️</div><div class="empty-text">Nenhum cupom criado ainda</div></div>';
+    return;
+  }
+  grid.innerHTML = window._cupons.map(c => {
+    const tipoLabel = c.tipo === 'dias_gratis' ? `${c.dias} dias grátis`
+      : c.tipo === 'desconto' ? `${c.desconto}% desconto`
+      : 'Acesso Vitalício';
+    const limiteTxt = c.limite === 0 ? 'Usos ilimitados' : `${c.usosAtual||0}/${c.limite} usos`;
+    return `<div class="coupon-card">
+      <div class="coupon-code">${c.codigo}</div>
+      <div class="coupon-desc">${c.descricao || tipoLabel}</div>
+      <div class="coupon-meta">
+        <span class="badge ${c.tipo === 'vitalicio' ? 'badge-gold' : 'badge-blue'}">${tipoLabel}</span>
+        <div style="display:flex; align-items:center; gap:8px">
+          <span class="coupon-uses">${limiteTxt}</span>
+          <button class="btn-sm btn-red" style="padding:4px 8px; font-size:10px" onclick="deletarCupom('${c.id}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.deletarCupom = async (id) => {
+  if (!confirm(`Deletar cupom "${id}"?`)) return;
+  try {
+    await deleteDoc(doc(db, 'cupons', id));
+    window._cupons = window._cupons.filter(c => c.id !== id);
+    renderizarCupons();
+    toast('Cupom deletado.', 'success');
+  } catch(e) { toast('Erro: ' + e.message, 'error'); }
+};
+
+// ── RECEITA ──
+function renderizarReceita() {
+  const usuarios = window._usuarios;
+  const contagem = {};
+  usuarios.forEach(u => {
+    const p = u.plano || 'trial';
+    contagem[p] = (contagem[p] || 0) + 1;
+  });
+
+  const ativos  = (contagem.mensal||0) + (contagem.trimestral||0) + (contagem.anual||0) + (contagem.promo||0);
+  const receita = ativos * 4.99;
+  document.getElementById('receitaMes').textContent  = 'R$ ' + receita.toFixed(2).replace('.',',');
+  document.getElementById('receitaQtd').textContent  = ativos;
+  document.getElementById('receitaTrial').textContent = contagem.trial || 0;
+
+  const total = usuarios.length || 1;
+  const linhas = [
+    { plano: 'Mensal',          qtd: contagem.mensal||0,      preco: 4.99 },
+    { plano: 'Trimestral',      qtd: contagem.trimestral||0,  preco: 4.99 },
+    { plano: 'Anual',           qtd: contagem.anual||0,       preco: 4.99 },
+    { plano: 'Promo/Vitalício', qtd: contagem.promo||0,       preco: 0    },
+    { plano: 'Trial',           qtd: contagem.trial||0,       preco: 0    },
+    { plano: 'Bloqueado',       qtd: contagem.bloqueado||0,   preco: 0    },
+  ];
+  document.getElementById('receitaBody').innerHTML = linhas.map(l => `
+    <tr>
+      <td>${badgePlano(l.plano.toLowerCase().split('/')[0].trim())}</td>
+      <td>${l.qtd}</td>
+      <td style="color:${l.preco > 0 ? 'var(--green)' : 'var(--text-dim)'}">
+        ${l.preco > 0 ? 'R$ ' + (l.qtd * l.preco).toFixed(2).replace('.',',') : '—'}
+      </td>
+      <td style="color:var(--text-dim)">${((l.qtd/total)*100).toFixed(1)}%</td>
+    </tr>`).join('');
+}
+
+// ── HELPERS ──
+function badgePlano(plano) {
+  const map = {
+    trial:       ['badge-blue',   '⏱ Trial'],
+    mensal:      ['badge-green',  '📅 Mensal'],
+    trimestral:  ['badge-green',  '📆 Trimestral'],
+    anual:       ['badge-gold',   '🏆 Anual'],
+    promo:       ['badge-gold',   '⭐ Promo'],
+    bloqueado:   ['badge-red',    '🚫 Bloqueado'],
+  };
+  const [cls, label] = map[plano] || ['badge-gray', plano || '—'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function badgeStatus(status, plano) {
+  if (plano === 'bloqueado' || status === 'bloqueado') return '<span class="badge badge-red">Bloqueado</span>';
+  if (status === 'ativo')    return '<span class="badge badge-green">Ativo</span>';
+  if (status === 'expirado') return '<span class="badge badge-red">Expirado</span>';
+  return `<span class="badge badge-gray">${status}</span>`;
+}
+function tsToDate(ts) {
+  if (!ts)                    return null;
+  if (ts.toDate)              return ts.toDate();
+  if (ts instanceof Date)     return ts;
+  if (typeof ts === 'number') return new Date(ts);
+  return null;
+}
+function formatarData(ts) {
+  const d = tsToDate(ts);
+  if (!d) return '—';
+  return d.toLocaleDateString('pt-BR');
+}
+function formatarExpiracao(ts) {
+  const d = tsToDate(ts);
+  if (!d) return '<span style="color:var(--gold)">Vitalício</span>';
+  const diff = d - new Date();
+  if (diff < 0) return '<span style="color:var(--red)">Expirado</span>';
+  const dias  = Math.ceil(diff / 86400000);
+  const color = dias < 5 ? 'var(--red)' : dias < 15 ? 'var(--orange)' : 'var(--green)';
+  return `<span style="color:${color}">${dias} dias</span>`;
+}
+function diasRestantes(ts) {
+  const d = tsToDate(ts);
+  if (!d) return 9999;
+  return Math.ceil((d - new Date()) / 86400000);
+}
+
+// ── MODAL ──
+window.fecharModal = (id) => document.getElementById(id)?.classList.remove('open');
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// ── TOAST ──
+window.toast = (msg, tipo = '') => {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + tipo;
+  setTimeout(() => { t.className = ''; }, 3500);
+};
+
+// Expor globais necessários para onclick inline
+window.carregarUsuarios = carregarUsuarios;
+</script>
+</body>
+</html>

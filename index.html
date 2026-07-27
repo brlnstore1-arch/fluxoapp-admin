@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FluxoApp Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════
+   VARIÁVEIS DE TEMA — Light (padrão) e Dark
+   ═══════════════════════════════════════ */
+:root{
+  --gold:#8A6010;--gold-dim:rgba(138,96,16,.12);--gold-light:#C9A84C;
+  --bg:#F5F0E8;--bg2:#FFFFFF;--bg3:#EDE8DC;--bg4:#E0D8C8;
+  --border:rgba(138,96,16,.2);--border2:rgba(0,0,0,.07);
+  --text:#1C1408;--dim:#7A6040;--dim2:#A09070;
+  --green:#1E7A45;--red:#B91C1C;--blue:#1D4ED8;--orange:#C2410C;--purple:#7C3AED;
+  --nav-h:64px;--hdr-h:56px;--safe:env(safe-area-inset-bottom,0px);
+  --shadow:0 2px 12px rgba(138,96,16,.1);
+  --skeleton-from:rgba(0,0,0,.06);--skeleton-to:rgba(0,0,0,.12);
+}
+body.dark{
+  --gold:#C9A84C;--gold-dim:rgba(201,168,76,.1);--gold-light:#E5C97A;
+  --bg:#111111;--bg2:#1C1C1C;--bg3:#262626;--bg4:#1A1A1A;
+  --border:rgba(201,168,76,.2);--border2:rgba(255,255,255,.06);
+  --text:#F0EAD6;--dim:#8A7A60;--dim2:#6A5A40;
+  --green:#3DAD6E;--red:#E05C5C;--blue:#60A5FA;--orange:#F97316;--purple:#A78BFA;
+  --shadow:0 2px 12px rgba(0,0,0,.4);
+  --skeleton-from:rgba(255,255,255,.04);--skeleton-to:rgba(255,255,255,.08);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg4);font-family:'DM Sans',sans-serif;color:var(--text);transition:background .25s,color .25s}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
+
+/* ── SKELETON LOADER ── */
+.skel{background:var(--skeleton-from);border-radius:8px;position:relative;overflow:hidden}
+.skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--skeleton-to),transparent);animation:shimmer 1.4s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.skel-line{height:12px;margin-bottom:8px;border-radius:4px}
+.skel-title{height:18px;width:60%;margin-bottom:12px;border-radius:6px}
+.skel-card{height:80px;border-radius:14px;margin-bottom:10px}
+.skel-avatar{width:42px;height:42px;border-radius:50%}
+
+/* ── TOAST MELHORADO ── */
+#toast{position:fixed;bottom:calc(var(--nav-h)+var(--safe)+10px);left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:11px 18px;font-size:13px;font-weight:500;z-index:9999;opacity:0;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none;
+  max-width:90vw;text-align:center;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:rgba(34,197,94,.4);color:var(--green)}
+#toast.er{border-color:rgba(239,68,68,.4);color:var(--red)}
+#toast.wa{border-color:rgba(249,115,22,.4);color:var(--orange)}
+.toast-icon{font-size:16px;flex-shrink:0}
+
+/* ── LOGIN ── */
+#sLogin{background:var(--bg);align-items:center;justify-content:center;padding:24px}
+.lcard{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:36px 28px;width:100%;max-width:380px;box-shadow:var(--shadow)}
+.logo{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--gold);margin-bottom:4px}
+.logo-sub{font-size:13px;color:var(--dim);margin-bottom:28px}
+.lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:7px;display:block}
+.inp{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:13px 16px;color:var(--text);font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:14px;-webkit-appearance:none;transition:border-color .2s}
+.inp:focus{border-color:var(--gold)}
+.btn{width:100%;background:var(--gold);color:#000;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .2s}
+.btn:active{opacity:.85}.btn:disabled{opacity:.5}
+.err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#FCA5A5;margin-bottom:12px;display:none}
+.role-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:16px}
+.role-master{background:rgba(201,168,76,.15);color:var(--gold);border:1px solid var(--border)}
+.role-suporte{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.25)}
+
+/* ── APP ── */
+#sApp{flex-direction:column}
+.hdr{height:var(--hdr-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;z-index:10}
+.hdr-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--gold);flex:1}
+.hdr-logo span{font-size:9px;color:var(--dim);display:block;font-weight:400;letter-spacing:.08em;text-transform:uppercase}
+.hdr-av{width:32px;height:32px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#000;cursor:pointer;flex-shrink:0}
+.hdr-badge{background:var(--red);color:#fff;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:700;display:none}
+.hdr-dark{width:30px;height:30px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0}
+
+/* ── STATUS BANNER (sistema) ── */
+.sys-banner{padding:7px 16px;display:none;align-items:center;gap:8px;flex-shrink:0;font-size:12px;font-weight:600}
+.sys-banner.show{display:flex}
+.sys-banner.warn{background:rgba(249,115,22,.12);border-bottom:1px solid rgba(249,115,22,.3);color:var(--orange)}
+.sys-banner.err{background:rgba(239,68,68,.12);border-bottom:2px solid var(--red);color:var(--red)}
+.sys-off-btn{background:var(--red);color:#fff;border:none;border-radius:8px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-left:auto}
+
+/* ── MAINTENANCE BANNER ── */
+.maint-banner{background:rgba(239,68,68,.15);border-bottom:2px solid var(--red);padding:10px 16px;display:none;align-items:center;gap:10px;flex-shrink:0}
+.maint-banner.show{display:flex}
+.maint-banner-txt{flex:1;font-size:12px;font-weight:600;color:var(--red)}
+.maint-off-btn{background:var(--red);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+
+/* ── REAL-TIME INDICATOR ── */
+.rt-dot{display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;margin-right:5px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h)+var(--safe)+16px)}
+.page{display:none;padding:16px}
+.page.active{display:block}
+
+/* ── BOTTOM NAV ── */
+.bnav{height:var(--nav-h);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;padding-bottom:var(--safe);flex-shrink:0}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:8px 0;position:relative;min-width:0}
+.nb .ic{font-size:18px;transition:transform .2s}
+.nb .lb{font-size:8px;font-weight:600;color:var(--dim);letter-spacing:.02em;transition:color .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.nb.active .lb{color:var(--gold)}
+.nb.active .ic{transform:scale(1.15)}
+.ndot{position:absolute;top:5px;right:calc(50% - 14px);width:7px;height:7px;background:var(--red);border-radius:50%;display:none}
+.ndot.on{display:block}
+
+/* ── FAB ── */
+.fab{position:fixed;right:18px;bottom:calc(var(--nav-h)+var(--safe)+14px);width:50px;height:50px;border-radius:50%;background:var(--gold);color:#000;font-size:22px;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,.4);z-index:50;border:none;font-family:'DM Sans',sans-serif}
+.fab:active{transform:scale(.92)}
+
+/* ── SECTIONS ── */
+.sec-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:3px}
+.sec-sub{font-size:12px;color:var(--dim);margin-bottom:16px;display:flex;align-items:center;gap:6px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+
+/* ── STATS CARDS ── */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.scard{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;position:relative;overflow:hidden}
+.scard::after{content:'';position:absolute;top:-8px;right:-8px;width:50px;height:50px;background:var(--gold-dim);border-radius:50%}
+.slbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:7px}
+.sval{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1}
+.sval.gold{color:var(--gold)}.sval.green{color:var(--green)}.sval.red{color:var(--red)}.sval.blue{color:var(--blue)}.sval.purple{color:var(--purple)}
+.snote{font-size:10px;color:var(--dim);margin-top:4px}
+.mom{font-size:10px;font-weight:700;margin-top:2px}
+.mom.up{color:var(--green)}.mom.dn{color:var(--red)}.mom.eq{color:var(--dim)}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.bg{background:rgba(34,197,94,.12);color:var(--green)}
+.br{background:rgba(239,68,68,.12);color:var(--red)}
+.bo{background:rgba(201,168,76,.12);color:var(--gold)}
+.bb{background:rgba(59,130,246,.12);color:var(--blue)}
+.bx{background:rgba(255,255,255,.06);color:var(--dim)}
+.bp{background:rgba(168,85,247,.12);color:var(--purple)}
+.bor{background:rgba(249,115,22,.12);color:var(--orange)}
+
+/* ── ALERT ── */
+.alert{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:14px;padding:14px;margin-bottom:12px;display:none}
+.alert.on{display:block}
+.alert-hd{font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px}
+.alert-row{font-size:12px;padding:6px 0;border-bottom:1px solid rgba(239,68,68,.1);display:flex;align-items:center;justify-content:space-between}
+.alert-row:last-child{border-bottom:none}
+
+/* ── CHART ── */
+.chart-wrap{position:relative;height:150px;margin-bottom:4px}
+
+/* ── USER CARDS ── */
+.sbox{background:var(--bg2);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;padding:0 14px;margin-bottom:10px;gap:8px}
+.sbox input{flex:1;background:transparent;border:none;padding:12px 0;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none}
+.sbox input::placeholder{color:var(--dim)}
+.filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.chip{padding:6px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--bg2);color:var(--dim);white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all .15s}
+.chip.on{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.users-toolbar{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.users-count{font-size:12px;color:var(--dim);flex:1}
+.btn-sm{padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:opacity .15s}
+.btn-sm:active{opacity:.8}
+.btn-outline{background:var(--bg3);border:1px solid var(--border);color:var(--dim);font-family:'DM Sans',sans-serif}
+.btn-export{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.25);font-family:'DM Sans',sans-serif}
+
+.batch{background:var(--bg2);border:1px solid var(--gold);border-radius:12px;padding:10px 14px;margin-bottom:10px;display:none;align-items:center;gap:8px}
+.batch.on{display:flex}
+.ucard{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;margin-bottom:8px;overflow:hidden;transition:border-color .15s}
+.ucard.sel{border-color:var(--gold);background:var(--gold-dim)}
+.ucinner{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.uav{width:42px;height:42px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--gold);flex-shrink:0}
+.uinfo{flex:1;min-width:0}
+.uname{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uemail{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.umeta{display:flex;align-items:center;gap:5px;margin-top:5px;flex-wrap:wrap}
+.uact{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.cb{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .15s}
+.cb.on{background:var(--gold);border-color:var(--gold);color:#000}
+.swwrap{position:relative;overflow:hidden;border-radius:14px;margin-bottom:8px}
+.swacts{position:absolute;right:0;top:0;bottom:0;display:flex;transform:translateX(100%);transition:transform .25s}
+.swa{width:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-size:10px;font-weight:600}
+.swa-d{background:#1A3A1A;color:var(--green)}
+.swa-e{background:#1E3A5F;color:var(--blue)}
+.swa-b{background:#3A1A1A;color:var(--red)}
+
+/* ── LOAD MORE ── */
+.load-more{text-align:center;padding:14px;color:var(--dim);font-size:13px;cursor:pointer;border:1px dashed var(--border);border-radius:12px;margin-top:6px;transition:all .2s}
+.load-more:hover{background:var(--bg3)}
+
+/* ── TRANSACTION LIST ── */
+.txrow{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border2)}
+.txrow:last-child{border-bottom:none}
+.txicon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.txinfo{flex:1;min-width:0}
+.txname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.txsub{font-size:11px;color:var(--dim);margin-top:1px}
+.txval{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--green);flex-shrink:0}
+
+/* ── NOTIF ── */
+.ncard{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:14px;margin-bottom:8px}
+.ncard-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.ntitle{font-size:14px;font-weight:600}
+.nmsg{font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:8px}
+.nfoot{display:flex;align-items:center;gap:8px}
+.ndate{font-size:10px;color:var(--dim2)}
+
+/* ── CONFIG ── */
+.cfg-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border2)}
+.cfg-row:last-child{border-bottom:none}
+.cfg-info{flex:1}
+.cfg-label{font-size:14px;font-weight:600;margin-bottom:2px}
+.cfg-sub{font-size:11px;color:var(--dim)}
+.toggle{width:46px;height:26px;border-radius:13px;background:var(--bg4);border:1px solid var(--border);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--green);border-color:var(--green)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle.on::after{transform:translateX(20px)}
+
+/* ── DEV ── */
+.dev-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.dev-item{background:var(--bg3);border-radius:10px;padding:8px 10px}
+.dev-lbl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.dev-val{font-size:12px;font-weight:600;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── SHEETS ── */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;backdrop-filter:blur(3px)}
+.ov.on{display:block}
+.sheet{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-radius:24px 24px 0 0;z-index:201;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);max-height:94vh;overflow-y:auto;padding-bottom:calc(20px + var(--safe))}
+.sheet.on{transform:translateY(0)}
+.hdl{width:36px;height:4px;background:var(--dim2);border-radius:2px;margin:12px auto 18px}
+.sh-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;padding:0 20px;margin-bottom:3px}
+.sh-sub{font-size:12px;color:var(--dim);padding:0 20px;margin-bottom:18px}
+.sh-body{padding:0 20px}
+.sh-foot{display:flex;gap:10px;padding:14px 20px 0}
+.sel{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:13px 36px 13px 14px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A7870' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;margin-bottom:14px}
+.sel option{background:var(--bg3)}
+.field{margin-bottom:14px}
+.field .lbl{display:block;margin-bottom:7px}
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border2)}
+.detail-row:last-child{border-bottom:none}
+.dl{font-size:12px;color:var(--dim)}
+.dv{font-size:13px;font-weight:600;text-align:right;max-width:60%;word-break:break-all}
+.abtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.abtn{background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:11px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;font-size:11px;font-weight:600;border:none;font-family:'DM Sans',sans-serif;color:var(--text);transition:opacity .15s}
+.abtn:active{opacity:.75}
+.abtn .ai{font-size:20px}
+.abtn.gr{background:rgba(34,197,94,.1);color:var(--green)}
+.abtn.rd{background:rgba(239,68,68,.1);color:var(--red)}
+.abtn.go{background:var(--gold-dim);color:var(--gold)}
+.abtn.bl{background:rgba(59,130,246,.1);color:var(--blue)}
+.abtn.pu{background:rgba(168,85,247,.1);color:var(--purple)}
+.abtn.wa{background:rgba(37,211,102,.1);color:#25D366}
+.days-row{display:flex;gap:8px;margin-bottom:14px}
+.dc{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.dc.on{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.empty{text-align:center;padding:44px 20px;color:var(--dim)}
+.empty-ic{font-size:36px;margin-bottom:10px;opacity:.5}
+.empty-tx{font-size:13px}
+.ntabs{display:flex;gap:4px;background:var(--bg3);border-radius:12px;padding:4px;margin-bottom:14px}
+.ntab{flex:1;padding:9px;border-radius:9px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;color:var(--dim);transition:all .15s;border:none;background:transparent;font-family:'DM Sans',sans-serif}
+.ntab.on{background:var(--bg2);color:var(--text)}
+textarea.inp{height:90px;resize:none;line-height:1.5}
+
+/* ── AUDITORIA ── */
+.log-row{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid var(--border2)}
+.log-row:last-child{border-bottom:none}
+.log-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.log-info{flex:1;min-width:0}
+.log-acao{font-size:12px;font-weight:600;margin-bottom:2px}
+.log-meta{font-size:10px;color:var(--dim)}
+
+/* ── HEALTH STATUS ── */
+.health-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2)}
+.health-row:last-child{border-bottom:none}
+.health-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.h-ok{background:var(--green)}
+.h-warn{background:var(--orange)}
+.h-err{background:var(--red)}
+.h-load{background:var(--dim);animation:pulse 1s infinite}
+
+/* ── WEBHOOK MONITOR ── */
+.wh-row{background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text);word-break:break-all;line-height:1.6;position:relative}
+.wh-time{font-size:9px;color:var(--dim);margin-bottom:4px}
+.wh-status{position:absolute;top:10px;right:10px}
+
+::-webkit-scrollbar{width:0;height:0}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN
+     ══════════════════════════════════════ -->
+<div class="screen active" id="sLogin">
+  <div class="lcard">
+    <div class="logo">⚡ FluxoApp</div>
+    <div class="logo-sub">Painel de Administração</div>
+    <div class="err" id="loginErr"></div>
+    <label class="lbl">Email</label>
+    <input class="inp" type="email" id="liEmail" placeholder="admin@fluxoapp.com">
+    <label class="lbl">Senha</label>
+    <input class="inp" type="password" id="liPwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn" id="liBtn" onclick="doLogin()">Entrar no Painel</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP
+     ══════════════════════════════════════ -->
+<div class="screen" id="sApp">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-logo">⚡ FluxoApp<span id="hdrRoleLabel">Admin Panel v4</span></div>
+    <div class="hdr-badge" id="hBadge"></div>
+    <div class="hdr-dark" onclick="toggleDark()" title="Dark mode">🌙</div>
+    <div class="hdr-av" id="hAv" onclick="openSheet('shAdmin')">A</div>
+  </div>
+
+  <!-- SISTEMA BANNER -->
+  <div class="sys-banner" id="sysBanner"></div>
+
+  <!-- MANUTENÇÃO BANNER -->
+  <div class="maint-banner" id="maintBanner">
+    <span style="font-size:16px">🔴</span>
+    <div class="maint-banner-txt">MODO MANUTENÇÃO ATIVO — Todos os usuários estão vendo a tela de manutenção</div>
+    <button class="maint-off-btn" onclick="desativarManutencao()">Desativar</button>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="pDash">
+      <div class="sec-title">Dashboard</div>
+      <div class="sec-sub" id="dDate">
+        <span class="rt-dot"></span><span id="dDateTxt">—</span>
+      </div>
+
+      <div class="alert on" id="alertExp" style="display:none">
+        <div class="alert-hd">⚠️ Expirando em breve</div>
+        <div id="alertList"></div>
+      </div>
+
+      <!-- STATS GRID -->
+      <div class="sgrid">
+        <div class="scard"><div class="slbl">Usuários</div><div class="sval gold" id="dTotal">—</div><div class="snote">cadastros</div><div class="mom eq" id="momTotal"></div></div>
+        <div class="scard"><div class="slbl">Ativos</div><div class="sval green" id="dAtiv">—</div><div class="snote">plano pago</div><div class="mom eq" id="momAtiv"></div></div>
+        <div class="scard"><div class="slbl">Trial</div><div class="sval blue" id="dTrial">—</div><div class="snote">gratuito</div><div class="mom eq" id="momTrial"></div></div>
+        <div class="scard"><div class="slbl">Expirados</div><div class="sval red" id="dExp">—</div><div class="snote">sem acesso</div></div>
+      </div>
+
+      <!-- ARPU + Receita + Churn (row) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+        <div class="scard" style="border-radius:14px">
+          <div class="slbl">ARPU</div>
+          <div class="sval green" style="font-size:18px" id="dARPU">R$—</div>
+          <div class="snote">por pagante</div>
+        </div>
+        <div class="scard" style="border-radius:14px">
+          <div class="slbl">Receita/mês</div>
+          <div class="sval purple" style="font-size:18px" id="dRecMes">R$—</div>
+          <div class="mom eq" id="momRec"></div>
+        </div>
+        <div class="scard" style="border-radius:14px">
+          <div class="slbl">Churn</div>
+          <div class="sval red" style="font-size:18px" id="dChurn">—%</div>
+          <div class="snote">este mês</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📈 Cadastros
+          <select class="sel" style="width:auto;padding:5px 28px 5px 10px;font-size:11px;margin:0" onchange="buildChart(+this.value)">
+            <option value="7">7 dias</option><option value="14">14 dias</option><option value="30">30 dias</option>
+          </select>
+        </div>
+        <div class="chart-wrap"><canvas id="chartC"></canvas></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎯 Conversão Trial → Pago</div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:var(--bg3);border-radius:12px;padding:12px;text-align:center">
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold)" id="cvPct">—%</div>
+            <div style="font-size:10px;color:var(--dim);margin-top:3px">Taxa</div>
+          </div>
+          <div style="flex:1;background:var(--bg3);border-radius:12px;padding:12px;text-align:center">
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--green)" id="cvRec">R$—</div>
+            <div style="font-size:10px;color:var(--dim);margin-top:3px">Este mês</div>
+          </div>
+          <div style="flex:1;background:var(--bg3);border-radius:12px;padding:12px;text-align:center">
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--blue)" id="cvProj">R$—</div>
+            <div style="font-size:10px;color:var(--dim);margin-top:3px">Projeção/ano</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🕐 Recentes</div>
+        <div id="recList"></div>
+      </div>
+    </div>
+
+    <!-- ══ USUÁRIOS ══ -->
+    <div class="page" id="pUsers">
+      <div class="sec-title">Usuários</div>
+      <div class="sbox">
+        <span style="color:var(--dim);font-size:16px">🔍</span>
+        <input type="search" id="srch" placeholder="Buscar nome ou email..." oninput="renderUsers()">
+      </div>
+      <div class="filters" id="filterRow">
+        <div class="chip on" onclick="setF('todos',this)">Todos</div>
+        <div class="chip" onclick="setF('trial',this)">⏱ Trial</div>
+        <div class="chip" onclick="setF('ativo',this)">✅ Ativos</div>
+        <div class="chip" onclick="setF('expirado',this)">❌ Expirados</div>
+        <div class="chip" onclick="setF('bloqueado',this)">🚫 Bloqueados</div>
+        <div class="chip" onclick="setF('expirando',this)">⚠️ Expirando</div>
+        <div class="chip" onclick="setF('plataforma99',this)">🟡 Usa 99</div>
+        <div class="chip" onclick="setF('taxsee',this)">🔵 Usa Taxsee</div>
+        <div class="chip" onclick="setF('semPush',this)">🔕 Sem push</div>
+        <div class="chip" onclick="setF('desatualizado',this)">⚠️ App desatualizado</div>
+      </div>
+      <div class="users-toolbar">
+        <span class="users-count" id="usersCount">— usuários</span>
+        <button class="btn-sm btn-export" onclick="exportCSV()">⬇️ CSV</button>
+      </div>
+      <div class="batch" id="batchBar">
+        <div style="flex:1;font-size:13px;font-weight:600;color:var(--gold)" id="batchInfo">0 selecionados</div>
+        <button class="btn-sm" style="background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold)" onclick="openSheet('shBatch')">+Dias</button>
+        <button class="btn-sm" style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)" onclick="batchBlock()">Bloquear</button>
+        <button class="btn-sm btn-outline" onclick="clearSel()">✕</button>
+      </div>
+      <div id="userList"></div>
+      <div class="load-more" id="loadMoreBtn" onclick="loadMoreUsers()" style="display:none">↓ Carregar mais</div>
+    </div>
+
+    <!-- ══ FINANCEIRO ══ -->
+    <div class="page" id="pFin">
+      <div class="sec-title">Financeiro</div>
+      <div class="sec-sub">Receita e transações</div>
+      <div class="sgrid">
+        <div class="scard"><div class="slbl">Receita/mês</div><div class="sval green" id="fMes">R$—</div><div class="mom eq" id="momFinRec"></div></div>
+        <div class="scard"><div class="slbl">Pagantes</div><div class="sval gold" id="fPag">—</div><div class="snote">assinantes</div></div>
+        <div class="scard"><div class="slbl">ARPU</div><div class="sval blue" id="fARPU">R$—</div><div class="snote">por pagante</div></div>
+        <div class="scard"><div class="slbl">Projeção/ano</div><div class="sval purple" id="fAnual">R$—</div><div class="snote">estimado</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📦 Por plano</div>
+        <div id="planoList"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">💳 Transações recentes
+          <button class="btn-sm btn-outline" onclick="loadTx()">↻</button>
+        </div>
+        <div id="txList"><div class="empty"><div class="empty-ic">💳</div><div class="empty-tx">Carregando...</div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ NOTIFICAÇÕES ══ -->
+    <div class="page" id="pNotif">
+      <div class="sec-title">Notificações</div>
+      <div class="sec-sub">Envie mensagens para os usuários</div>
+      <div class="card" style="border-color:var(--gold)">
+        <div class="card-title" style="color:var(--gold)">📨 Nova notificação</div>
+        <div class="field"><label class="lbl">Destinatários</label>
+          <div class="ntabs">
+            <button class="ntab on" onclick="selTarget('todos',this)">Todos</button>
+            <button class="ntab" onclick="selTarget('trial',this)">Trial</button>
+            <button class="ntab" onclick="selTarget('ativos',this)">Ativos</button>
+            <button class="ntab" onclick="selTarget('plataforma99',this)">🟡 Usa 99</button>
+            <button class="ntab" onclick="selTarget('taxsee',this)">🔵 Usa Taxsee</button>
+            <button class="ntab" onclick="selTarget('desatualizado',this)">⚠️ Desatualizados</button>
+            <button class="ntab" onclick="selTarget('semPush',this)">🔕 Sem push</button>
+            <button class="ntab" id="ntabSelecionados" onclick="selTarget('selecionados',this)">👆 Selecionados (<span id="ntabSelCount">0</span>)</button>
+          </div>
+        </div>
+        <div class="field"><label class="lbl">Título</label><input class="inp" id="nTitulo" placeholder="Ex: Nova atualização disponível!"></div>
+        <div class="field"><label class="lbl">Mensagem</label><textarea class="inp" id="nMsg" placeholder="Escreva a mensagem que os usuários verão..."></textarea></div>
+        <div class="field"><label class="lbl">Tipo</label>
+          <select class="sel" id="nTipo" style="margin-bottom:0">
+            <option value="info">ℹ️ Informação</option>
+            <option value="promo">🎁 Promoção</option>
+            <option value="alerta">⚠️ Alerta</option>
+            <option value="atualizacao">🔄 Atualização</option>
+          </select>
+        </div>
+        <button class="btn" onclick="enviarNotif()">📨 Enviar notificação</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Enviadas
+          <button class="btn-sm btn-outline" onclick="loadNotifs()">↻</button>
+        </div>
+        <div id="notifList"><div class="empty"><div class="empty-ic">📭</div><div class="empty-tx">Nenhuma notificação</div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ UPDATES ══ -->
+    <div class="page" id="pUpdates">
+      <div style="padding:0">
+      <div class="sec-title">Atualizações</div>
+      <div class="sec-sub">Publique versões · usuários recebem pop-up automaticamente</div>
+      <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:14px;padding:14px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:#60A5FA;margin-bottom:8px">📖 Como obter a URL do APK</div>
+        <div style="font-size:12px;color:var(--dim);line-height:1.7">
+          1. Rode o build no GitHub Actions → baixe o APK<br>
+          2. Vá em <strong style="color:var(--text)">github.com → Releases → New release</strong><br>
+          3. Arraste o APK → <strong style="color:var(--text)">Publish release</strong><br>
+          4. Botão direito no link → <strong style="color:var(--text)">Copiar endereço</strong><br>
+          5. Cole a URL abaixo ↓
+        </div>
+      </div>
+      <div class="card" style="border-color:var(--gold)">
+        <div class="card-title" style="color:var(--gold)">📦 Versão publicada atualmente</div>
+        <div id="versaoPublicadaInfo"><div class="skel skel-card"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Adoção de versão</div>
+        <div id="adocaoVersaoInfo" style="font-size:12px;color:var(--dim)">
+          <div class="skel skel-line" style="width:80%"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🚀 Publicar nova versão</div>
+        <div class="field"><label class="lbl">URL do APK</label>
+          <input class="inp" type="url" id="upApkUrl" placeholder="https://github.com/.../releases/download/v3.2/app.apk">
+          <div id="urlStatus" style="font-size:11px;margin-top:6px;display:none"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="field" style="margin-bottom:0"><label class="lbl">versionCode</label><input class="inp" type="number" id="upVersionCode" placeholder="Ex: 28"></div>
+          <div class="field" style="margin-bottom:0"><label class="lbl">versionName</label><input class="inp" type="text" id="upVersionName" placeholder="Ex: 3.2"></div>
+        </div>
+        <div class="field" style="margin-top:10px"><label class="lbl">Título do pop-up</label><input class="inp" type="text" id="upTitulo" placeholder="Ex: FluxoApp 3.2 — Grandes novidades!"></div>
+        <div class="field"><label class="lbl">Novidades</label><textarea class="inp" id="upDescricao" style="height:90px;resize:none" placeholder="• Nova funcionalidade X&#10;• Correção de bug Y"></textarea></div>
+        <div class="field"><label class="lbl">Tamanho MB (opcional)</label><input class="inp" type="number" id="upTamanho" placeholder="Ex: 12.5" step="0.1"></div>
+        <div class="cfg-row" style="border:none;padding-bottom:0">
+          <div class="cfg-info"><div class="cfg-label">Atualização obrigatória</div><div class="cfg-sub">Usuário não consegue fechar o pop-up</div></div>
+          <div class="toggle" id="toggleObrigat" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <button class="btn" id="btnPublicarUpdate" onclick="publicarUpdate()" style="margin-top:16px">🚀 Publicar atualização</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Histórico <button class="btn-sm btn-outline" onclick="carregarHistoricoUpdates()">↻</button></div>
+        <div id="historicoUpdates"><div class="skel skel-card"></div></div>
+      </div>
+      </div>
+    </div>
+
+    <!-- ══ AUDITORIA ══ -->
+    <div class="page" id="pAudit">
+      <div class="sec-title">Auditoria</div>
+      <div class="sec-sub">Registro imutável de todas as ações administrativas</div>
+
+      <!-- HEALTH STATUS -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title">🩺 Saúde do sistema
+          <button class="btn-sm btn-outline" style="font-size:11px" onclick="checkHealth()">↻ Verificar</button>
+        </div>
+        <div id="healthList">
+          <div class="health-row"><div class="health-dot h-load"></div><span style="font-size:13px;flex:1">Firebase Auth</span><span style="font-size:11px;color:var(--dim)" id="h-auth">Verificando...</span></div>
+          <div class="health-row"><div class="health-dot h-load"></div><span style="font-size:13px;flex:1">Firestore</span><span style="font-size:11px;color:var(--dim)" id="h-fs">Verificando...</span></div>
+          <div class="health-row"><div class="health-dot h-load"></div><span style="font-size:13px;flex:1">APK mais recente</span><span style="font-size:11px;color:var(--dim)" id="h-apk">—</span></div>
+        </div>
+      </div>
+
+      <!-- LOGS DE AUDITORIA -->
+      <div class="card">
+        <div class="card-title">📋 Logs de ações
+          <button class="btn-sm btn-outline" style="font-size:11px" onclick="loadAuditLogs()">↻</button>
+        </div>
+        <div id="auditList"><div class="skel skel-card"></div><div class="skel skel-card"></div></div>
+      </div>
+
+      <!-- WEBHOOK MONITOR -->
+      <div class="card">
+        <div class="card-title">🔌 Monitor de Webhooks (Mercado Pago)
+          <button class="btn-sm btn-outline" style="font-size:11px" onclick="loadWebhooks()">↻</button>
+        </div>
+        <div style="background:rgba(59,130,246,.08);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--dim)">
+          Últimas transações recebidas via webhook. Configure o endpoint no MP como: <span style="font-family:'DM Mono',monospace;color:var(--text)">https://us-central1-fluxoapp-painel.cloudfunctions.net/mpWebhook</span>
+        </div>
+        <div id="webhookList"><div class="skel skel-card"></div></div>
+      </div>
+
+      <!-- CLOUD FUNCTIONS — LOGS -->
+      <div class="card">
+        <div class="card-title">📜 Logs das Cloud Functions</div>
+        <div style="font-size:11px;color:var(--dim);margin-bottom:10px">
+          Se um webhook do Mercado Pago ou um push (FCM) falhar, o motivo detalhado
+          fica nos logs da função — não aparece aqui no painel. Acesse direto:
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <a href="https://console.cloud.google.com/functions/details/us-central1/mpWebhook?project=fluxoapp-painel&tab=logs" target="_blank"
+             class="btn-sm btn-outline" style="text-align:center;text-decoration:none">
+            🔌 Logs — mpWebhook (pagamentos)
+          </a>
+          <a href="https://console.cloud.google.com/functions/details/us-central1/onNotificacaoCriada?project=fluxoapp-painel&tab=logs" target="_blank"
+             class="btn-sm btn-outline" style="text-align:center;text-decoration:none">
+            🔔 Logs — onNotificacaoCriada (push)
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CONFIG ══ -->
+    <div class="page" id="pConfig">
+      <div class="sec-title">Configurações</div>
+      <div class="sec-sub">Controle do app em produção</div>
+
+      <div class="card" id="maintCard">
+        <div class="card-title" style="color:var(--red)">🔴 Modo Manutenção</div>
+        <div class="cfg-row">
+          <div class="cfg-info"><div class="cfg-label">Ativar manutenção</div><div class="cfg-sub">Todos os usuários verão tela de aviso ao abrir o app</div></div>
+          <div class="toggle" id="toggleMaint" onclick="toggleMaintenance()"></div>
+        </div>
+        <div class="field" style="margin-top:12px"><label class="lbl">Mensagem de manutenção</label>
+          <input class="inp" id="maintMsg" placeholder="Ex: Estamos atualizando o FluxoApp. Volte em breve!" style="margin-bottom:8px">
+          <button class="btn" onclick="salvarMensagemMaint()">Salvar mensagem</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="color:var(--orange)">📱 Versão Mínima</div>
+        <div class="cfg-row">
+          <div class="cfg-info"><div class="cfg-label">Versão mínima aceita</div><div class="cfg-sub">Usuários abaixo são forçados a atualizar</div></div>
+          <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--orange)" id="versaoAtual">—</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input class="inp" type="number" id="novaVersao" placeholder="Ex: 26" style="flex:1;margin-bottom:0">
+          <button class="btn" style="width:auto;padding:13px 18px" onclick="salvarVersao()">Salvar</button>
+        </div>
+        <div class="field" style="margin-top:12px"><label class="lbl">Mensagem de atualização</label>
+          <input class="inp" id="versaoMsg" placeholder="Ex: Nova versão com melhorias importantes!" style="margin-bottom:8px">
+          <button class="btn" onclick="salvarMensagemVersao()">Salvar mensagem</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎟️ Cupons <button class="btn-sm" style="background:var(--gold);color:#000" onclick="openSheet('shCupom')">+ Novo</button></div>
+        <div id="cfgCuponsList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 Dispositivos dos usuários</div>
+        <div id="deviceStats"></div>
+      </div>
+
+      <!-- RBAC: só master vê gestão de admins -->
+      <div class="card" id="adminMgmtCard" style="display:none">
+        <div class="card-title">👑 Gestão de Admins <span class="badge bo" style="font-size:9px">MASTER</span></div>
+        <div id="adminList"></div>
+        <button class="btn" style="margin-top:10px" onclick="openSheet('shNovoAdmin')">+ Novo admin</button>
+      </div>
+    </div>
+
+  </div><!-- content -->
+
+  <!-- ══ BOTTOM NAV ══ -->
+  <div class="bnav">
+    <div class="nb active" id="nb0" onclick="goPage(0)"><span class="ic">📊</span><span class="lb">Dashboard</span><div class="ndot" id="nd0"></div></div>
+    <div class="nb" id="nb1" onclick="goPage(1)"><span class="ic">👥</span><span class="lb">Usuários</span></div>
+    <div class="nb" id="nb2" onclick="goPage(2)"><span class="ic">💰</span><span class="lb">Financeiro</span></div>
+    <div class="nb" id="nb3" onclick="goPage(3)"><span class="ic">🔔</span><span class="lb">Notifics</span><div class="ndot" id="nd3"></div></div>
+    <div class="nb" id="nb4" onclick="goPage(4)"><span class="ic">📦</span><span class="lb">Updates</span></div>
+    <div class="nb" id="nb5" onclick="goPage(5)"><span class="ic">🔍</span><span class="lb">Auditoria</span></div>
+    <div class="nb" id="nb6" onclick="goPage(6)"><span class="ic">⚙️</span><span class="lb">Config</span><div class="ndot" id="nd6"></div></div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn" onclick="fabAct()">+</button>
+
+<!-- OVERLAY -->
+<div class="ov" id="ov" onclick="closeSheets()"></div>
+
+<!-- ══ SHEET: ADMIN CONTA ══ -->
+<div class="sheet" id="shAdmin">
+  <div class="hdl"></div>
+  <div class="sh-title">Minha conta</div>
+  <div class="sh-sub" id="shAdminEmail">—</div>
+  <div class="sh-body">
+    <div id="shAdminRole" style="margin-bottom:14px"></div>
+    <button class="btn" style="margin-bottom:10px" onclick="doLogout()">Sair da conta</button>
+    <button class="btn-sm btn-outline" style="width:100%;padding:13px" onclick="closeSheets();loadAll()">↻ Recarregar dados</button>
+  </div>
+</div>
+
+<!-- ══ SHEET: USUÁRIO DETALHE ══ -->
+<div class="sheet" id="shUser">
+  <div class="hdl"></div>
+  <div class="sh-title" id="shUN">Usuário</div>
+  <div class="sh-sub" id="shUE">—</div>
+  <div class="sh-body">
+    <input type="hidden" id="shUID">
+    <div id="shUDetail" style="background:var(--bg3);border-radius:14px;padding:4px 14px;margin-bottom:14px"></div>
+    <div class="abtns" id="shUActs"></div>
+    <div id="shDevInfo" style="display:none">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:8px">📱 Dispositivo</div>
+      <div class="dev-grid" id="shDevGrid"></div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="field"><label class="lbl">Nome</label><input class="inp" id="shNome" placeholder="Nome"></div>
+      <div class="field"><label class="lbl">Plano</label>
+        <select class="sel" id="shPlano">
+          <option value="trial">⏱ Trial</option><option value="mensal">📅 Mensal</option>
+          <option value="trimestral">📆 Trimestral</option><option value="anual">🏆 Anual</option>
+          <option value="promo">⭐ Promo/Vitalício</option><option value="bloqueado">🚫 Bloqueado</option>
+        </select>
+      </div>
+      <div class="field"><label class="lbl">Status</label>
+        <select class="sel" id="shStatus"><option value="ativo">Ativo</option><option value="expirado">Expirado</option><option value="bloqueado">Bloqueado</option></select>
+      </div>
+      <div class="field"><label class="lbl">Expiração</label><input class="inp" type="date" id="shExp"></div>
+      <div class="field"><label class="lbl">Código promo</label><input class="inp" id="shPromo" placeholder="Opcional" style="font-family:'DM Mono',monospace"></div>
+    </div>
+  </div>
+  <div class="sh-foot">
+    <button class="btn-sm btn-outline" style="padding:13px 18px;border-radius:12px" onclick="closeSheets()">Cancelar</button>
+    <button class="btn" style="flex:1" onclick="saveUser()">Salvar</button>
+  </div>
+</div>
+
+<!-- ══ SHEET: DIAS ══ -->
+<div class="sheet" id="shDias">
+  <div class="hdl"></div>
+  <div class="sh-title">Adicionar dias</div>
+  <div class="sh-sub" id="shDSub">—</div>
+  <div class="sh-body">
+    <input type="hidden" id="shDUID">
+    <div class="days-row">
+      <div class="dc" onclick="pickD(7,this)">7d</div>
+      <div class="dc on" onclick="pickD(30,this)">30d</div>
+      <div class="dc" onclick="pickD(60,this)">60d</div>
+      <div class="dc" onclick="pickD(90,this)">90d</div>
+    </div>
+    <div class="field"><label class="lbl">Personalizado</label><input class="inp" type="number" id="shDCust" placeholder="Ex: 45" min="1"></div>
+  </div>
+  <div class="sh-foot">
+    <button class="btn-sm btn-outline" style="padding:13px 18px;border-radius:12px" onclick="closeSheets()">Cancelar</button>
+    <button class="btn" style="flex:1" onclick="confirmDias()">✅ Confirmar</button>
+  </div>
+</div>
+
+<!-- ══ SHEET: BATCH ══ -->
+<div class="sheet" id="shBatch">
+  <div class="hdl"></div>
+  <div class="sh-title">Renovar em lote</div>
+  <div class="sh-sub" id="shBSub">—</div>
+  <div class="sh-body">
+    <div class="days-row">
+      <div class="dc" onclick="pickD(7,this)">7d</div>
+      <div class="dc on" onclick="pickD(30,this)">30d</div>
+      <div class="dc" onclick="pickD(60,this)">60d</div>
+      <div class="dc" onclick="pickD(90,this)">90d</div>
+    </div>
+    <div class="field"><label class="lbl">Personalizado</label><input class="inp" type="number" id="shBCust" placeholder="Ex: 45" min="1"></div>
+  </div>
+  <div class="sh-foot">
+    <button class="btn-sm btn-outline" style="padding:13px 18px;border-radius:12px" onclick="closeSheets()">Cancelar</button>
+    <button class="btn" style="flex:1" onclick="confirmBatch()">✅ Aplicar para todos</button>
+  </div>
+</div>
+
+<!-- ══ SHEET: CUPOM ══ -->
+<div class="sheet" id="shCupom">
+  <div class="hdl"></div>
+  <div class="sh-title">Novo Cupom</div>
+  <div class="sh-sub">Crie um código de acesso</div>
+  <div class="sh-body">
+    <div class="field"><label class="lbl">Código</label><input class="inp" id="cCod" placeholder="Ex: AMIGO30" style="font-family:'DM Mono',monospace;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="field"><label class="lbl">Tipo</label>
+      <select class="sel" id="cTipo" onchange="updCF()" style="margin-bottom:0">
+        <option value="dias_gratis">Dias Grátis</option><option value="desconto">Desconto %</option><option value="vitalicio">Acesso Vitalício</option>
+      </select>
+    </div>
+    <div id="cDF"><div class="field" style="margin-top:12px"><label class="lbl">Dias</label><input class="inp" type="number" id="cDias" placeholder="30"></div></div>
+    <div id="cDescF" style="display:none"><div class="field" style="margin-top:12px"><label class="lbl">Desconto %</label><input class="inp" type="number" id="cDesc" placeholder="50"></div></div>
+    <div class="field"><label class="lbl">Limite de usos (0=ilimitado)</label><input class="inp" type="number" id="cLim" placeholder="0"></div>
+    <div class="field"><label class="lbl">Válido até</label><input class="inp" type="date" id="cVal"></div>
+    <div class="field"><label class="lbl">Descrição</label><input class="inp" id="cDesc2" placeholder="Ex: Cupom para beta testers"></div>
+  </div>
+  <div class="sh-foot">
+    <button class="btn-sm btn-outline" style="padding:13px 18px;border-radius:12px" onclick="closeSheets()">Cancelar</button>
+    <button class="btn" style="flex:1" onclick="saveCupom()">Criar cupom</button>
+  </div>
+</div>
+
+<!-- ══ SHEET: NOVO ADMIN ══ -->
+<div class="sheet" id="shNovoAdmin">
+  <div class="hdl"></div>
+  <div class="sh-title">Novo Admin</div>
+  <div class="sh-sub">Apenas o Master pode criar admins</div>
+  <div class="sh-body">
+    <div class="field"><label class="lbl">Email do admin</label><input class="inp" type="email" id="naEmail" placeholder="suporte@fluxoapp.com"></div>
+    <div class="field"><label class="lbl">Nível de acesso</label>
+      <select class="sel" id="naRole" style="margin-bottom:0">
+        <option value="suporte">🎧 Suporte (só visualizar + +dias)</option>
+        <option value="master">👑 Master (acesso total)</option>
+      </select>
+    </div>
+  </div>
+  <div class="sh-foot">
+    <button class="btn-sm btn-outline" style="padding:13px 18px;border-radius:12px" onclick="closeSheets()">Cancelar</button>
+    <button class="btn" style="flex:1" onclick="salvarNovoAdmin()">Criar admin</button>
+  </div>
+</div>
+
+<div id="toast"><span class="toast-icon" id="toastIcon"></span><span id="toastMsg"></span></div>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT — Firebase + Lógica
+     ══════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, updateDoc,
+         deleteDoc, addDoc, query, orderBy, limit, Timestamp, onSnapshot, where, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ── Firebase config ────────────────────────────────────────────────────────
+// A apiKey aqui é restrita por domínio no Google Cloud Console.
+// Só funciona quando acessada do domínio autorizado.
+// Veja: console.cloud.google.com → APIs → Credenciais → Restrições de chave
+const FB = {
+  apiKey:            window.__FLUXO_CFG?.apiKey            || "AIzaSyBYbvJlCh-NRIBCGwSfqpYhE19_7zbsyPo",
+  authDomain:        window.__FLUXO_CFG?.authDomain        || "fluxoapp-painel.firebaseapp.com",
+  projectId:         window.__FLUXO_CFG?.projectId         || "fluxoapp-painel",
+  storageBucket:     window.__FLUXO_CFG?.storageBucket     || "fluxoapp-painel.firebasestorage.app",
+  messagingSenderId: window.__FLUXO_CFG?.messagingSenderId || "342331386113",
+  appId:             window.__FLUXO_CFG?.appId             || "1:342331386113:web:2cbb1affa20651b7981300"
+};
+const app  = initializeApp(FB);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── ESTADO ──
+let _users=[],_cupons=[],_notifs=[],_tx=[],_appCfg={},_auditLogs=[],_webhooks=[],_latestUpdate=null;
+let _filter='todos',_sel=new Set(),_diasSel=30,_notifTarget='todos',_curPage=0;
+let _chart=null, _adminRole='', _adminEmail='';
+let _pageSize=25, _pageOffset=0;
+let _usersUnsubscribe=null; // onSnapshot cleanup
+
+// ── DARK MODE ──
+const isDark = () => document.body.classList.contains('dark');
+const savedDark = localStorage.getItem('fluxo_dark');
+if(savedDark==='1') document.body.classList.add('dark');
+
+window.toggleDark = () => {
+  document.body.classList.toggle('dark');
+  localStorage.setItem('fluxo_dark', isDark()?'1':'0');
+  document.querySelector('.hdr-dark').textContent = isDark()?'☀️':'🌙';
+  if(_chart) buildChart(7);
+};
+if(isDark()) document.querySelector('.hdr-dark').textContent='☀️';
+
+// ── UTILS ──
+const tsD = ts => { if(!ts) return null; if(ts.toDate) return ts.toDate(); if(ts instanceof Date) return ts; if(typeof ts==='number') return new Date(ts); return null; };
+const fmtD = ts => { const d=tsD(ts); return d ? d.toLocaleDateString('pt-BR') : '—'; };
+const fmtDT = ts => { const d=tsD(ts); return d ? d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—'; };
+const diasR = ts => { const d=tsD(ts); if(!d) return 9999; return Math.ceil((d-new Date())/86400000); };
+const fmtDias = ts => { const d=diasR(ts); if(d===9999) return '<span style="color:var(--gold)">Vitalício</span>'; if(d<=0) return '<span style="color:var(--red)">Expirado</span>'; const c=d<=3?'var(--red)':d<=7?'var(--orange)':'var(--green)'; return `<span style="color:${c}">${d}d</span>`; };
+const bPlano = p => { const m={trial:['bb','⏱ Trial'],mensal:['bg','📅 Mensal'],trimestral:['bg','📆 Trim.'],anual:['bo','🏆 Anual'],promo:['bo','⭐ Promo'],bloqueado:['br','🚫 Bloq.']}; const [c,l]=m[p]||['bx',p||'—']; return `<span class="badge ${c}">${l}</span>`; };
+const bStatus = (s,p) => { if(p==='bloqueado'||s==='bloqueado') return '<span class="badge br">Bloqueado</span>'; if(s==='ativo') return '<span class="badge bg">Ativo</span>'; if(s==='expirado') return '<span class="badge br">Expirado</span>'; return `<span class="badge bx">${s}</span>`; };
+const tempoRelativo = ts => {
+  const d=tsD(ts); if(!d) return '—';
+  const s=Math.floor((Date.now()-d.getTime())/1000);
+  if(s<60) return 'Agora há pouco'; if(s<3600) return `Há ${Math.floor(s/60)} min`;
+  if(s<86400) return `Há ${Math.floor(s/3600)}h`; if(s<604800) return `Há ${Math.floor(s/86400)} dia(s)`;
+  return fmtD(ts);
+};
+
+// ── TOAST MELHORADO ──
+window.toast = (m,t='') => {
+  const icons={ok:'✅',er:'❌',wa:'⚠️','':`ℹ️`};
+  document.getElementById('toastIcon').textContent=icons[t]||'ℹ️';
+  document.getElementById('toastMsg').textContent=m;
+  const el=document.getElementById('toast');
+  el.className='on '+(t==='ok'?'ok':t==='er'?'er':t==='wa'?'wa':'');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.className='',3500);
+};
+
+window.openSheet = id => { document.getElementById('ov').classList.add('on'); document.getElementById(id).classList.add('on'); };
+window.closeSheets = () => { document.getElementById('ov').classList.remove('on'); document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('on')); };
+
+// ── AUDIT LOG — escreve ação no Firestore ──
+async function auditLog(acao, dados={}) {
+  try {
+    await addDoc(collection(db,'adminLogs'), {
+      adminEmail: _adminEmail,
+      adminRole:  _adminRole,
+      acao,
+      dados,
+      timestamp: Timestamp.now()
+    });
+  } catch(e) { console.warn('auditLog error:', e.message); }
+}
+
+// ── AUTH ──
+onAuthStateChanged(auth, async u => {
+  if(u) {
+    _adminEmail = u.email||'';
+    // Verificar role na coleção admins
+    try {
+      const adminDoc = await getDoc(doc(db,'admins',u.email));
+      if(adminDoc.exists()) {
+        _adminRole = adminDoc.data().role || 'suporte';
+      } else {
+        // Documento não existe: coleção admins ainda não foi configurada.
+        // Tentar criar automaticamente como master (primeiro acesso).
+        try {
+          await setDoc(doc(db,'admins',u.email), {
+            role: 'master',
+            criadoEm: Timestamp.now(),
+            criadoPor: 'auto-bootstrap'
+          });
+          _adminRole = 'master';
+          toast('✅ Conta master criada automaticamente!','ok');
+        } catch(createErr) {
+          // Sem permissão de criar — isso significa que as rules estão ativas
+          // mas sem o documento. Exibir setup wizard.
+          _adminRole = 'sem_acesso';
+          mostrarSetupWizard(u.email);
+          return;
+        }
+      }
+    } catch(e) {
+      // Erro de permissão lendo admins → tentar bootstrap
+      try {
+        await setDoc(doc(db,'admins',u.email), {
+          role: 'master', criadoEm: Timestamp.now(), criadoPor: 'auto-bootstrap'
+        });
+        _adminRole = 'master';
+      } catch(_) {
+        _adminRole = 'sem_acesso';
+        mostrarSetupWizard(u.email);
+        return;
+      }
+    }
+
+    document.getElementById('sLogin').classList.remove('active');
+    document.getElementById('sApp').classList.add('active');
+    document.getElementById('fabBtn').style.display='flex';
+    document.getElementById('hAv').textContent=(u.email||'A')[0].toUpperCase();
+    document.getElementById('shAdminEmail').textContent=u.email;
+    document.getElementById('hdrRoleLabel').textContent=`Admin Panel v4 · ${_adminRole}`;
+
+    // Badge de role na sheet de admin
+    const roleBadge = _adminRole==='master'
+      ? '<span class="role-badge role-master">👑 Master — Acesso total</span>'
+      : '<span class="role-badge role-suporte">🎧 Suporte — Visualização + dias</span>';
+    document.getElementById('shAdminRole').innerHTML=roleBadge;
+
+    // Mostrar gestão de admins só para master
+    if(_adminRole==='master') document.getElementById('adminMgmtCard').style.display='block';
+
+    // Restringir ações para suporte
+    if(_adminRole==='suporte') {
+      // Suporte não pode usar manutenção, publicar updates, deletar notifs
+      document.getElementById('maintCard')?.querySelectorAll('.toggle,.btn').forEach(el=>el.style.pointerEvents='none');
+    }
+
+    loadAll();
+    setupRealtimeUsers(); // onSnapshot
+    checkHealth();
+  } else {
+    document.getElementById('sLogin').classList.add('active');
+    document.getElementById('sApp').classList.remove('active');
+    document.getElementById('fabBtn').style.display='none';
+    if(_usersUnsubscribe) { _usersUnsubscribe(); _usersUnsubscribe=null; }
+  }
+});
+
+window.doLogin = async () => {
+  const e=document.getElementById('liEmail').value.trim(),p=document.getElementById('liPwd').value;
+  const err=document.getElementById('loginErr'),btn=document.getElementById('liBtn');
+  err.style.display='none'; btn.disabled=true; btn.textContent='Entrando...';
+  try { await signInWithEmailAndPassword(auth,e,p); }
+  catch(ex){ const m={'auth/wrong-password':'Senha incorreta.','auth/user-not-found':'Usuário não encontrado.','auth/invalid-credential':'Email ou senha incorretos.','auth/network-request-failed':'Sem conexão.'}; err.textContent=m[ex.code]||'Erro ao entrar.'; err.style.display='block'; btn.disabled=false; btn.textContent='Entrar no Painel'; }
+};
+window.doLogout = async () => { await auditLog('logout'); await signOut(auth); closeSheets(); };
+
+// ── REAL-TIME USERS via onSnapshot ──
+function setupRealtimeUsers() {
+  if(_usersUnsubscribe) _usersUnsubscribe();
+  _usersUnsubscribe = onSnapshot(
+    query(collection(db,'users'), orderBy('criadoEm','desc')),
+    snap => {
+      _users = snap.docs.map(d=>({uid:d.id,...d.data()}));
+      renderAll();
+      showSysBanner('');
+    },
+    err => {
+      if(err.code === 'permission-denied') {
+        showSysBanner('Sem permissão no Firestore. Verifique as Security Rules e a coleção admins.', 'err');
+        toast('❌ Sem permissão — configure as Firestore Rules','er');
+      } else {
+        showSysBanner('Erro de conexão com Firebase. Dados podem estar desatualizados.', 'warn');
+      }
+    }
+  );
+}
+
+function showSysBanner(msg, type='') {
+  const b=document.getElementById('sysBanner');
+  if(!msg){ b.className='sys-banner'; b.style.display='none'; return; }
+  b.innerHTML=`<span>⚠️ ${msg}</span>`;
+  b.className=`sys-banner show ${type||'warn'}`;
+  b.style.display='flex';
+}
+
+// ── LOAD ALL (inicial) ──
+window.loadAll = async () => {
+  try {
+    const [cS,nS,txS,cfgDoc,updDoc] = await Promise.all([
+      getDocs(collection(db,'cupons')),
+      getDocs(query(collection(db,'notificacoes'),orderBy('criadoEm','desc'),limit(30))),
+      getDocs(query(collection(db,'transacoes'),orderBy('criadoEm','desc'),limit(50))),
+      getDoc(doc(db,'config','app')),
+      getDoc(doc(db,'updates','latest'))
+    ]);
+    _cupons = cS.docs.map(d=>({id:d.id,...d.data()}));
+    _notifs = nS.docs.map(d=>({id:d.id,...d.data()}));
+    _tx     = txS.docs.map(d=>({id:d.id,...d.data()}));
+    _appCfg = cfgDoc.exists() ? cfgDoc.data() : {};
+    _latestUpdate = updDoc.exists() ? updDoc.data() : null;
+    renderFin(); renderNotifs(); renderConfig(); applyConfig(); renderUsers();
+  } catch(e){ toast('Erro ao carregar: '+e.message,'er'); }
+};
+
+function renderAll(){
+  _pageOffset=0;
+  renderDash(); renderUsers(); renderFin(); renderNotifs(); renderConfig();
+  checkAlerts(); applyConfig();
+}
+
+// ── NAV ──
+const PAGES=['pDash','pUsers','pFin','pNotif','pUpdates','pAudit','pConfig'];
+const NBS=['nb0','nb1','nb2','nb3','nb4','nb5','nb6'];
+window.goPage = n => {
+  _curPage=n;
+  PAGES.forEach((p,i)=>{ document.getElementById(p).classList.toggle('active',i===n); document.getElementById(NBS[i]).classList.toggle('active',i===n); });
+  document.getElementById('fabBtn').style.display=(n===1)?'flex':'none';
+  if(n===2) renderFin();
+  if(n===4){ carregarVersaoPublicada(); carregarHistoricoUpdates(); renderAdocaoVersao(); }
+  if(n===5){ loadAuditLogs(); loadWebhooks(); checkHealth(); }
+  if(n===6) loadAdmins();
+};
+window.fabAct = () => { if(_curPage===1) openNewUser(); };
+
+// ── DASHBOARD ──
+function renderDash(){
+  const total=_users.length;
+  const ativ=_users.filter(u=>u.status==='ativo'&&u.plano!=='trial'&&u.plano!=='bloqueado').length;
+  const trial=_users.filter(u=>u.plano==='trial'&&u.status==='ativo').length;
+  const exp=_users.filter(u=>u.status==='expirado'||u.status==='bloqueado'||u.plano==='bloqueado').length;
+
+  document.getElementById('dTotal').textContent=total;
+  document.getElementById('dAtiv').textContent=ativ;
+  document.getElementById('dTrial').textContent=trial;
+  document.getElementById('dExp').textContent=exp;
+  document.getElementById('dDateTxt').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+
+  // Métricas financeiras
+  const recEstimada=ativ*4.99;
+  const arpu=ativ>0?(recEstimada/ativ).toFixed(2):0;
+  document.getElementById('dARPU').textContent=`R$${parseFloat(arpu).toFixed(2).replace('.',',')}`;
+  document.getElementById('dRecMes').textContent=`R$${recEstimada.toFixed(0).replace('.',',')}`;
+
+  // Churn estimado (users que expiraram este mês)
+  const agora=new Date(), mesAtual=agora.getMonth(), anoAtual=agora.getFullYear();
+  const churned=_users.filter(u=>{
+    const d=tsD(u.dataExpiracao);
+    return d&&d.getMonth()===mesAtual&&d.getFullYear()===anoAtual&&u.status==='expirado';
+  }).length;
+  const churnPct=total>0?Math.round((churned/total)*100):0;
+  document.getElementById('dChurn').textContent=`${churnPct}%`;
+
+  // MoM — compara com mês passado (aproximação: users criados no mês atual vs mês anterior)
+  const mesAnt = mesAtual===0?11:mesAtual-1;
+  const anoAnt = mesAtual===0?anoAtual-1:anoAtual;
+  const novosEsseMes=_users.filter(u=>{ const d=tsD(u.criadoEm); return d&&d.getMonth()===mesAtual&&d.getFullYear()===anoAtual; }).length;
+  const novosMesAnt=_users.filter(u=>{ const d=tsD(u.criadoEm); return d&&d.getMonth()===mesAnt&&d.getFullYear()===anoAnt; }).length;
+  const momPct = novosMesAnt>0?Math.round(((novosEsseMes-novosMesAnt)/novosMesAnt)*100):0;
+  const momClass=momPct>0?'up':momPct<0?'dn':'eq';
+  const momArrow=momPct>0?'↑':momPct<0?'↓':'→';
+  document.getElementById('momTotal').className=`mom ${momClass}`;
+  document.getElementById('momTotal').textContent=`${momArrow} ${Math.abs(momPct)}% vs mês passado`;
+
+  // Conversão
+  const pct=total>0?Math.round((ativ/total)*100):0;
+  document.getElementById('cvPct').textContent=pct+'%';
+  document.getElementById('cvRec').textContent='R$'+(recEstimada).toFixed(0);
+  document.getElementById('cvProj').textContent='R$'+(recEstimada*12).toFixed(0);
+
+  document.getElementById('recList').innerHTML=_users.slice(0,5).map(u=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border2)">
+      <div class="uav" style="width:34px;height:34px;font-size:13px">${(u.nome||u.email||'?')[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.nome||'—'}</div><div style="font-size:10px;color:var(--dim)">${fmtD(u.criadoEm)}</div></div>
+      ${bPlano(u.plano)}
+    </div>`).join('')||'<div class="empty"><div class="empty-ic">👥</div><div class="empty-tx">Nenhum usuário</div></div>';
+
+  buildChart(7);
+}
+
+window.buildChart = days => {
+  const now=new Date(); const lbls=[],vals=[];
+  for(let i=days-1;i>=0;i--){
+    const d=new Date(now); d.setDate(d.getDate()-i);
+    lbls.push(d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}));
+    vals.push(_users.filter(u=>{ const cd=tsD(u.criadoEm); return cd&&cd.toDateString()===d.toDateString(); }).length);
+  }
+  const ctx=document.getElementById('chartC').getContext('2d');
+  const goldColor = isDark() ? '#C9A84C' : '#8A6010';
+  if(_chart) _chart.destroy();
+  _chart=new Chart(ctx,{type:'line',data:{labels:lbls,datasets:[{data:vals,borderColor:goldColor,backgroundColor:isDark()?'rgba(201,168,76,.08)':'rgba(138,96,16,.07)',borderWidth:2,fill:true,tension:.4,pointBackgroundColor:goldColor,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'var(--dim)',font:{size:9}},grid:{color:isDark()?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)'}},y:{ticks:{color:'var(--dim)',font:{size:9},stepSize:1},grid:{color:isDark()?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)'},beginAtZero:true}}}});
+};
+
+// ── ALERTS ──
+function checkAlerts(){
+  const exp=_users.filter(u=>{ if(u.status==='bloqueado') return false; const d=diasR(u.dataExpiracao); return d>=0&&d<=3; });
+  const alertEl=document.getElementById('alertExp');
+  const nd0=document.getElementById('nd0');
+  const hb=document.getElementById('hBadge');
+  if(exp.length>0){
+    alertEl.style.display='block'; nd0.classList.add('on');
+    hb.style.display='block'; hb.textContent=exp.length;
+    document.getElementById('alertList').innerHTML=exp.map(u=>`<div class="alert-row"><span>${u.nome||u.email||'—'}</span><span style="color:var(--red);font-weight:700">${diasR(u.dataExpiracao)}d</span></div>`).join('');
+  } else { alertEl.style.display='none'; nd0.classList.remove('on'); hb.style.display='none'; }
+  document.getElementById('nd6').classList.toggle('on', !!_appCfg.manutencao);
+}
+
+// ── USERS ──
+window.setF = (f,el) => { _filter=f; _pageOffset=0; document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on')); el.classList.add('on'); renderUsers(); };
+
+function filtrados(){
+  const q=(document.getElementById('srch')?.value||'').toLowerCase();
+  return _users.filter(u=>{
+    const mq=!q||(u.nome||'').toLowerCase().includes(q)||(u.email||'').toLowerCase().includes(q);
+    if(!mq) return false;
+    if(_filter==='todos') return true;
+    if(_filter==='trial') return u.plano==='trial';
+    if(_filter==='ativo') return u.status==='ativo'&&u.plano!=='trial'&&u.plano!=='bloqueado';
+    if(_filter==='expirado') return u.status==='expirado';
+    if(_filter==='bloqueado') return u.status==='bloqueado'||u.plano==='bloqueado';
+    if(_filter==='expirando'){ const d=diasR(u.dataExpiracao); return d>=0&&d<=3; }
+    // Item 5 — novos filtros: plataforma, push e versão desatualizada
+    if(_filter==='plataforma99') return !!u.plataforma99Ativa;
+    if(_filter==='taxsee') return !u.plataforma99Ativa;
+    if(_filter==='semPush') return !u.fcmToken;
+    if(_filter==='desatualizado'){
+      const vAtual=u.deviceInfo?.versionCode||0, vPub=_latestUpdate?.versionCode||0;
+      return vPub>0 && vAtual>0 && vAtual<vPub;
+    }
+    return true;
+  });
+}
+
+window.renderUsers = () => {
+  const lista=filtrados();
+  const paginated=lista.slice(0,_pageOffset+_pageSize);
+  const el=document.getElementById('userList');
+  document.getElementById('usersCount').textContent=`${lista.length} usuários`;
+
+  if(!lista.length){ el.innerHTML='<div class="empty"><div class="empty-ic">🔍</div><div class="empty-tx">Nenhum usuário encontrado</div></div>'; document.getElementById('loadMoreBtn').style.display='none'; return; }
+
+  el.innerHTML=paginated.map(u=>{
+    const s=_sel.has(u.uid);
+    const d=diasR(u.dataExpiracao);
+    const dc=d===9999?'var(--gold)':d<=0?'var(--red)':d<=3?'var(--red)':d<=7?'var(--orange)':'var(--green)';
+    const dt=d===9999?'Vitalício':d<=0?'Expirado':`${d}d`;
+    // Item 1 — plataforma (Taxsee/Maxim vs 99), sincronizada pelo app
+    const bPlataforma = u.plataforma99Ativa
+      ? '<span class="badge bg" title="Detecção da 99 ativada">🟡 99</span>'
+      : '<span class="badge bx" title="Usando Taxsee/Maxim">🔵 Taxsee</span>';
+    // Item 4 — alerta de versão desatualizada (compara com updates/latest)
+    const vAtual = u.deviceInfo?.versionCode || 0;
+    const vPub   = _latestUpdate?.versionCode || 0;
+    const desatualizado = vPub > 0 && vAtual > 0 && vAtual < vPub;
+    const bVersao = desatualizado
+      ? `<span class="badge br" title="Versão publicada: ${vPub}">⚠️ v${vAtual} desatualizado</span>`
+      : '';
+    // Item 3 — indicador de push habilitado
+    const bPush = u.fcmToken
+      ? '<span style="font-size:9px;color:var(--green)" title="Push habilitado">🔔</span>'
+      : '<span style="font-size:9px;color:var(--dim)" title="Sem push — notificações push não chegam pra esse usuário">🔕</span>';
+    return `<div class="swwrap" id="sw_${u.uid}">
+      <div class="ucard${s?' sel':''}" id="uc_${u.uid}" onclick="togSel('${u.uid}')">
+        <div class="ucinner">
+          <div class="uav">${(u.nome||u.email||'?')[0].toUpperCase()}</div>
+          <div class="uinfo">
+            <div class="uname">${u.nome||'Sem nome'}</div>
+            <div class="uemail">${u.email||'—'}</div>
+            <div class="umeta">${bPlano(u.plano)}<span style="font-size:10px;color:${dc}">${dt}</span>${bPlataforma}${bPush}${bVersao}${u.deviceInfo?`<span style="font-size:9px;color:var(--dim)">📱${((u.deviceInfo.brand||'')+' '+(u.deviceInfo.model||'')).trim()}</span>`:''}</div>
+          </div>
+          <div class="uact">
+            <div class="cb${s?' on':''}" onclick="event.stopPropagation();togSel('${u.uid}')">${s?'✓':''}</div>
+            <button style="background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;padding:2px" onclick="event.stopPropagation();openUser('${u.uid}')">›</button>
+          </div>
+        </div>
+      </div>
+      <div class="swacts" id="sa_${u.uid}">
+        <div class="swa swa-d" onclick="openDias('${u.uid}')"><span style="font-size:18px">📅</span>+Dias</div>
+        <div class="swa swa-e" onclick="openUser('${u.uid}')"><span style="font-size:18px">✏️</span>Editar</div>
+        <div class="swa swa-b" onclick="togBlock('${u.uid}')">${u.status==='bloqueado'||u.plano==='bloqueado'?'<span style="font-size:18px">✅</span>Liberar':'<span style="font-size:18px">🚫</span>Bloquear'}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  paginated.forEach(u=>setupSw(u.uid));
+  updBatch();
+
+  const loadMoreBtn=document.getElementById('loadMoreBtn');
+  loadMoreBtn.style.display=(paginated.length<lista.length)?'block':'none';
+  if(paginated.length<lista.length) loadMoreBtn.textContent=`↓ Carregar mais (${lista.length-paginated.length} restantes)`;
+};
+
+window.loadMoreUsers = () => { _pageOffset+=_pageSize; renderUsers(); };
+
+// CSV EXPORT
+window.exportCSV = () => {
+  const lista=filtrados();
+  const vPub=_latestUpdate?.versionCode||0;
+  const header=['Nome','Email','Plano','Status','Expiração','Cadastro','Corridas','Ganho Total','Ganho Mês','Corridas Mês','Km Total','Cidade','Veículo','Plataforma','Push Habilitado','Versão App','Desatualizado'];
+  const rows=lista.map(u=>{
+    const vAtual=u.deviceInfo?.versionCode||0;
+    const desatualizado = vPub>0 && vAtual>0 && vAtual<vPub;
+    return [
+      u.nome||'',u.email||'',u.plano||'',u.status||'',
+      fmtD(u.dataExpiracao),fmtD(u.criadoEm),
+      u.stats?.totalCorridas||0,u.stats?.ganhoTotal||0,
+      u.stats?.ganhoMes||0,u.stats?.corridasMes||0,u.stats?.kmTotal||0,
+      u.cidade||'',u.veiculo||'',
+      u.plataforma99Ativa?'99':'Taxsee/Maxim',
+      u.fcmToken?'Sim':'Não',
+      vAtual||'—',
+      desatualizado?'Sim':'Não'
+    ];
+  });
+  const csv=[header,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`fluxoapp_usuarios_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  URL.revokeObjectURL(url);
+  toast(`${lista.length} usuários exportados!`,'ok');
+  auditLog('exportar_csv',{filtro:_filter,total:lista.length});
+};
+
+function setupSw(uid){
+  const c=document.getElementById(`uc_${uid}`),a=document.getElementById(`sa_${uid}`);
+  if(!c||!a) return;
+  let sx=0,dx=0,sw=false;
+  c.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sw=false;},{passive:true});
+  c.addEventListener('touchmove',e=>{dx=e.touches[0].clientX-sx;if(dx<-8){sw=true;a.style.transform=`translateX(${100+Math.min(0,Math.max(-204,dx))/204*100}%)`;} },{passive:true});
+  c.addEventListener('touchend',()=>{if(sw&&dx<-60)a.style.transform='translateX(0)';else a.style.transform='translateX(100%)';});
+}
+
+window.togSel = uid => {
+  if(_sel.has(uid)) _sel.delete(uid); else _sel.add(uid);
+  const c=document.getElementById(`uc_${uid}`),cb=c?.querySelector('.cb');
+  if(c) c.classList.toggle('sel',_sel.has(uid));
+  if(cb){cb.classList.toggle('on',_sel.has(uid));cb.textContent=_sel.has(uid)?'✓':'';}
+  updBatch();
+};
+function updBatch(){
+  const b=document.getElementById('batchBar');
+  b.classList.toggle('on',_sel.size>0);
+  document.getElementById('batchInfo').textContent=`${_sel.size} selecionado${_sel.size>1?'s':''}`;
+  document.getElementById('shBSub').textContent=`Para ${_sel.size} usuário${_sel.size>1?'s':''}`;
+  const ntabSel=document.getElementById('ntabSelCount');
+  if(ntabSel) ntabSel.textContent=_sel.size;
+}
+window.clearSel = () => { _sel.clear(); renderUsers(); };
+
+// WHATSAPP SUPORTE
+function whatsappBtn(uid) {
+  const u=_users.find(x=>x.uid===uid); if(!u) return;
+  const nome=u.nome||'motorista';
+  const msg=encodeURIComponent(`Olá ${nome}, aqui é o suporte do FluxoApp! Como posso ajudá-lo(a)?`);
+  const tel=u.telefone?u.telefone.replace(/\D/g,''):'';
+  const url=tel?`https://wa.me/55${tel}?text=${msg}`:`https://wa.me/?text=${msg}`;
+  window.open(url,'_blank');
+}
+
+window.openUser = async uid => {
+  const u=_users.find(x=>x.uid===uid); if(!u) return;
+  document.getElementById('shUID').value=uid;
+  document.getElementById('shUN').textContent=u.nome||'Sem nome';
+  document.getElementById('shUE').textContent=u.email||uid;
+  document.getElementById('shNome').value=u.nome||'';
+  document.getElementById('shPlano').value=u.plano||'trial';
+  document.getElementById('shStatus').value=u.status||'ativo';
+  document.getElementById('shPromo').value=u.codigoPromo||'';
+  document.getElementById('shExp').value=tsD(u.dataExpiracao)?tsD(u.dataExpiracao).toISOString().split('T')[0]:'';
+  const st=u.stats||{};
+  const veicIco=u.veiculo==='carro'?'🚗':u.veiculo==='bike'?'🚴':'🏍️';
+
+  document.getElementById('shUDetail').innerHTML=`
+    <div class="detail-row"><span class="dl">Status</span><span class="dv">${bStatus(u.status,u.plano)}</span></div>
+    <div class="detail-row"><span class="dl">Plano</span><span class="dv">${bPlano(u.plano)}</span></div>
+    <div class="detail-row"><span class="dl">Dias restantes</span><span class="dv">${fmtDias(u.dataExpiracao)}</span></div>
+    <div class="detail-row"><span class="dl">Cadastro</span><span class="dv">${fmtD(u.criadoEm)}</span></div>
+    <div class="detail-row"><span class="dl">Expiração</span><span class="dv">${fmtD(u.dataExpiracao)||'Vitalício'}</span></div>
+    <div class="detail-row"><span class="dl">Último acesso</span><span class="dv">${tempoRelativo(u.lastSeen)}</span></div>
+    ${u.cidade?`<div class="detail-row"><span class="dl">Cidade</span><span class="dv">📍 ${u.cidade}</span></div>`:''}
+    ${u.veiculo?`<div class="detail-row"><span class="dl">Veículo</span><span class="dv">${veicIco} ${u.veiculo}</span></div>`:''}
+    ${u.codigoPromo?`<div class="detail-row"><span class="dl">Cupom</span><span class="dv" style="font-family:'DM Mono',monospace;color:var(--gold)">${u.codigoPromo}</span></div>`:''}
+    <div style="margin-top:10px;padding:10px;background:var(--bg3);border-radius:12px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:8px">📊 Uso do app</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--gold)">${st.totalCorridas||0}</div><div style="font-size:9px;color:var(--dim)">corridas</div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--green)">R$${(st.ganhoTotal||0).toFixed(0)}</div><div style="font-size:9px;color:var(--dim)">ganho total</div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--blue)">R$${(st.mediaValor||0).toFixed(2)}</div><div style="font-size:9px;color:var(--dim)">média/corrida</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border2)">
+        <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--green)">R$${(st.ganhoHoje||0).toFixed(0)}</div><div style="font-size:8px;color:var(--dim)">hoje</div></div>
+        <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--green)">R$${(st.ganhoMes||0).toFixed(0)}</div><div style="font-size:8px;color:var(--dim)">este mês</div></div>
+        <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--gold)">${st.corridasMes||0}</div><div style="font-size:8px;color:var(--dim)">corridas/mês</div></div>
+        <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--blue)">${(st.kmTotal||0).toFixed(0)}km</div><div style="font-size:8px;color:var(--dim)">total rodado</div></div>
+      </div>
+      ${st.ultimaCorrida?`<div style="font-size:10px;color:var(--dim);margin-top:6px;text-align:center">Última: ${st.ultimaCorrida.data||'—'} às ${st.ultimaCorrida.hora||'—'} — R$${(st.ultimaCorrida.valor||0).toFixed(2)}</div>`:'<div style="font-size:10px;color:var(--dim);margin-top:6px;text-align:center">Sem corridas registradas</div>'}
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)">🔌 Plataforma:</span>
+      ${u.plataforma99Ativa?'<span class="badge bg">🟡 Detectando 99</span>':'<span class="badge bx">🔵 Taxsee/Maxim</span>'}
+      ${u.fcmToken?'<span class="badge bg">🔔 Push OK</span>':'<span class="badge br">🔕 Sem push</span>'}
+      ${(()=>{ const vA=u.deviceInfo?.versionCode||0, vP=_latestUpdate?.versionCode||0; return (vP>0&&vA>0&&vA<vP) ? `<span class="badge br">⚠️ Desatualizado (v${vA} → v${vP})</span>` : ''; })()}
+    </div>
+    <div style="margin-top:10px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:6px">💳 Histórico de planos</div>
+      <div id="shHistPlanos" style="font-size:12px;color:var(--dim)"><div class="skel skel-line" style="width:80%"></div><div class="skel skel-line" style="width:60%"></div></div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:6px">📝 Notas internas</div>
+      <textarea id="shNotasInternas" class="inp" style="height:70px;resize:none;font-size:12px" placeholder="Anotações sobre este usuário...">${u.notasInternas||''}</textarea>
+      <button class="btn-sm" style="background:var(--gold);color:#000;margin-top:4px;width:100%" onclick="salvarNotas('${uid}')">Salvar notas</button>
+    </div>`;
+
+  const bl=u.status==='bloqueado'||u.plano==='bloqueado';
+  const isSuporte = _adminRole==='suporte';
+  document.getElementById('shUActs').innerHTML=`
+    <button class="abtn go" onclick="openDias('${uid}')"><span class="ai">📅</span>+Dias</button>
+    ${!isSuporte?`<button class="abtn ${bl?'gr':'rd'}" onclick="togBlock('${uid}')">${bl?'<span class="ai">✅</span>Liberar':'<span class="ai">🚫</span>Bloquear'}</button>`:''}
+    <button class="abtn bl" onclick="addDR('${uid}',30)"><span class="ai">⚡</span>+30 dias</button>
+    <button class="abtn wa" onclick="whatsappBtn('${uid}')"><span class="ai">💬</span>WhatsApp</button>`;
+
+  if(u.deviceInfo){
+    document.getElementById('shDevInfo').style.display='block';
+    const di=u.deviceInfo;
+    document.getElementById('shDevGrid').innerHTML=`
+      <div class="dev-item"><div class="dev-lbl">Marca</div><div class="dev-val">${di.brand||'—'}</div></div>
+      <div class="dev-item"><div class="dev-lbl">Modelo</div><div class="dev-val">${di.model||'—'}</div></div>
+      <div class="dev-item"><div class="dev-lbl">Android</div><div class="dev-val">${di.androidVersion||'—'}</div></div>
+      <div class="dev-item"><div class="dev-lbl">SDK</div><div class="dev-val">${di.sdkVersion||'—'}</div></div>
+      <div class="dev-item"><div class="dev-lbl">App versão</div><div class="dev-val">${di.appVersion||'—'}</div></div>
+      <div class="dev-item"><div class="dev-lbl">versionCode</div><div class="dev-val">${di.versionCode||'—'}</div></div>`;
+  } else { document.getElementById('shDevInfo').style.display='none'; }
+
+  openSheet('shUser');
+
+  // Carregar histórico de planos async
+  try {
+    const histSnap=await getDocs(query(collection(db,'users',uid,'historicoPlanos'),orderBy('ativadoEm','desc'),limit(10)));
+    const histEl=document.getElementById('shHistPlanos');
+    if(!histEl) return;
+    histEl.innerHTML=histSnap.docs.length>0
+      ? histSnap.docs.map(h=>{ const d=h.data(); return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border2)"><span style="font-size:11px;flex:1;color:var(--dim)">${fmtD(d.ativadoEm||d.inicio)}</span>${bPlano(d.plano)}<span style="font-size:11px;color:var(--green)">R$ ${(d.valor||0).toFixed(2)}</span></div>`; }).join('')
+      : 'Nenhum pagamento registrado';
+  } catch(e) { const el=document.getElementById('shHistPlanos'); if(el) el.textContent='Erro ao carregar'; }
+};
+
+window.salvarNotas = async uid => {
+  const notas=document.getElementById('shNotasInternas')?.value||'';
+  try{
+    await updateDoc(doc(db,'users',uid),{notasInternas:notas,atualizadoEm:Timestamp.now()});
+    const u=_users.find(x=>x.uid===uid); if(u) u.notasInternas=notas;
+    await auditLog('salvar_notas',{uid});
+    toast('Notas salvas!','ok');
+  }catch(e){toast('Erro: '+e.message,'er');}
+};
+
+window.saveUser = async () => {
+  const uid=document.getElementById('shUID').value;
+  const nome=document.getElementById('shNome').value.trim();
+  const plano=document.getElementById('shPlano').value;
+  const status=document.getElementById('shStatus').value;
+  const exp=document.getElementById('shExp').value;
+  const promo=document.getElementById('shPromo').value.trim();
+  // Suporte não pode mudar plano para bloqueado
+  if(_adminRole==='suporte'&&status==='bloqueado'){ toast('Suporte não pode bloquear usuários','er'); return; }
+  const dados={nome,plano,status,atualizadoEm:Timestamp.now()};
+  if(promo) dados.codigoPromo=promo;
+  if(exp) dados.dataExpiracao=Timestamp.fromDate(new Date(exp+'T23:59:59'));
+  if(plano==='promo'&&!exp) dados.dataExpiracao=null;
+  try {
+    if(uid){ await updateDoc(doc(db,'users',uid),dados); const i=_users.findIndex(u=>u.uid===uid); if(i>=0) Object.assign(_users[i],dados); }
+    else { dados.email=document.getElementById('shUE').textContent; dados.criadoEm=Timestamp.now(); if(!exp){ const e=new Date(); e.setDate(e.getDate()+7); dados.dataExpiracao=Timestamp.fromDate(e); } const r=await addDoc(collection(db,'users'),dados); _users.unshift({uid:r.id,...dados}); }
+    await auditLog('editar_usuario',{uid,plano,status});
+    closeSheets(); renderUsers(); renderDash(); checkAlerts(); toast('Salvo!','ok');
+  } catch(e){ toast('Erro: '+e.message,'er'); }
+};
+
+window.togBlock = async uid => {
+  if(_adminRole==='suporte'){ toast('Suporte não pode bloquear usuários','wa'); return; }
+  const u=_users.find(x=>x.uid===uid); if(!u) return;
+  const bl=u.status==='bloqueado'||u.plano==='bloqueado';
+  const dados=bl?{status:'ativo',plano:'mensal',dataExpiracao:Timestamp.fromDate(new Date(Date.now()+30*86400000)),atualizadoEm:Timestamp.now()}:{status:'bloqueado',plano:'bloqueado',atualizadoEm:Timestamp.now()};
+  try{
+    await updateDoc(doc(db,'users',uid),dados); Object.assign(u,dados);
+    await auditLog(bl?'liberar_usuario':'bloquear_usuario',{uid,email:u.email});
+    closeSheets(); renderUsers(); renderDash(); checkAlerts(); toast(bl?'Liberado com 30 dias!':'Bloqueado','ok');
+  }catch(e){toast('Erro: '+e.message,'er');}
+};
+
+window.openDias = uid => {
+  const u=_users.find(x=>x.uid===uid);
+  document.getElementById('shDUID').value=uid;
+  document.getElementById('shDSub').textContent=u?.nome||u?.email||uid;
+  _diasSel=30; document.querySelectorAll('#shDias .dc').forEach((c,i)=>c.classList.toggle('on',i===1));
+  document.getElementById('shDCust').value='';
+  closeSheets(); openSheet('shDias');
+};
+window.pickD = (n,el) => { _diasSel=n; el.closest('.days-row').querySelectorAll('.dc').forEach(c=>c.classList.remove('on')); el.classList.add('on'); };
+window.confirmDias = async () => { const uid=document.getElementById('shDUID').value; const c=parseInt(document.getElementById('shDCust').value); await addDR(uid,c>0?c:_diasSel); };
+window.addDR = async (uid,dias) => {
+  const u=_users.find(x=>x.uid===uid); if(!u) return;
+  const base=tsD(u.dataExpiracao)||new Date(); const desde=base>new Date()?base:new Date();
+  const nova=new Date(desde.getTime()+dias*86400000);
+  try{
+    const d={dataExpiracao:Timestamp.fromDate(nova),status:'ativo',atualizadoEm:Timestamp.now()};
+    await updateDoc(doc(db,'users',uid),d); Object.assign(u,d);
+    await auditLog('adicionar_dias',{uid,email:u.email,dias,novaExpiracao:nova.toISOString()});
+    closeSheets(); renderUsers(); renderDash(); checkAlerts(); toast(`+${dias} dias!`,'ok');
+  }catch(e){toast('Erro: '+e.message,'er');}
+};
+
+window.batchBlock = async () => {
+  if(_adminRole==='suporte'){ toast('Suporte não pode bloquear em lote','wa'); return; }
+  if(!confirm(`Bloquear ${_sel.size} usuário(s)?`)) return;
+  const d={status:'bloqueado',plano:'bloqueado',atualizadoEm:Timestamp.now()};
+  await Promise.all([..._sel].map(uid=>updateDoc(doc(db,'users',uid),d).then(()=>{const u=_users.find(x=>x.uid===uid);if(u)Object.assign(u,d);})));
+  await auditLog('bloquear_em_lote',{uids:[..._sel],total:_sel.size});
+  _sel.clear(); renderUsers(); renderDash(); checkAlerts(); toast('Bloqueados.','ok');
+};
+window.confirmBatch = async () => {
+  const c=parseInt(document.getElementById('shBCust').value); const dias=c>0?c:_diasSel;
+  await Promise.all([..._sel].map(uid=>addDRsilent(uid,dias)));
+  await auditLog('adicionar_dias_lote',{uids:[..._sel],dias,total:_sel.size});
+  _sel.clear(); closeSheets(); renderUsers(); renderDash(); checkAlerts(); toast(`+${dias} dias para todos!`,'ok');
+};
+async function addDRsilent(uid,dias){
+  const u=_users.find(x=>x.uid===uid); if(!u) return;
+  const base=tsD(u.dataExpiracao)||new Date(); const desde=base>new Date()?base:new Date();
+  const nova=new Date(desde.getTime()+dias*86400000);
+  const d={dataExpiracao:Timestamp.fromDate(nova),status:'ativo',atualizadoEm:Timestamp.now()};
+  await updateDoc(doc(db,'users',uid),d); Object.assign(u,d);
+}
+
+window.openNewUser = () => {
+  document.getElementById('shUID').value=''; document.getElementById('shUN').textContent='Novo Usuário';
+  document.getElementById('shUE').textContent='Preencha os dados'; document.getElementById('shNome').value='';
+  document.getElementById('shPlano').value='trial'; document.getElementById('shStatus').value='ativo';
+  document.getElementById('shExp').value=''; document.getElementById('shPromo').value='';
+  document.getElementById('shUDetail').innerHTML=''; document.getElementById('shUActs').innerHTML='';
+  document.getElementById('shDevInfo').style.display='none';
+  openSheet('shUser');
+};
+
+// ── FINANCEIRO ──
+window.renderFin = () => {
+  const ativ=_users.filter(u=>u.status==='ativo'&&u.plano!=='trial'&&u.plano!=='bloqueado').length;
+  const pixConf=_tx.filter(t=>t.status==='aprovado');
+  const agora=new Date(), mes=agora.getMonth(), ano=agora.getFullYear();
+  const recMes=pixConf.filter(t=>{ const d=tsD(t.criadoEm); return d&&d.getMonth()===mes&&d.getFullYear()===ano; }).reduce((s,t)=>s+(parseFloat(t.valor)||0),0);
+  const recEstimada=recMes>0?recMes:ativ*4.99;
+  const arpu=ativ>0?(recEstimada/ativ).toFixed(2):0;
+
+  document.getElementById('fMes').textContent='R$ '+recEstimada.toFixed(2).replace('.',',');
+  document.getElementById('fPag').textContent=ativ;
+  document.getElementById('fARPU').textContent='R$ '+parseFloat(arpu).toFixed(2).replace('.',',');
+  document.getElementById('fAnual').textContent='R$ '+(recEstimada*12).toFixed(0).replace('.',',');
+
+  const total=_users.length||1;
+  const planos=['mensal','trimestral','anual','promo','trial','bloqueado'];
+  const lbs={mensal:'📅 Mensal',trimestral:'📆 Trimestral',anual:'🏆 Anual',promo:'⭐ Promo',trial:'⏱ Trial',bloqueado:'🚫 Bloqueado'};
+  const cnt={}; _users.forEach(u=>{const p=u.plano||'trial';cnt[p]=(cnt[p]||0)+1;});
+  document.getElementById('planoList').innerHTML=planos.map(p=>{
+    const q=cnt[p]||0,pct=Math.round((q/total)*100);
+    const rv=['mensal','trimestral','anual','promo'].includes(p)?`<span style="color:var(--green);font-size:11px;min-width:60px;text-align:right">R$ ${(q*4.99).toFixed(2)}</span>`:'<span style="min-width:60px"></span>';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2)">
+      <div style="min-width:90px;font-size:12px;font-weight:600">${lbs[p]}</div>
+      <div style="flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden"><div style="height:100%;background:var(--gold);border-radius:2px;width:${pct}%;transition:width .5s"></div></div>
+      <div style="font-size:12px;color:var(--dim);min-width:20px;text-align:center">${q}</div>${rv}
+    </div>`;
+  }).join('');
+  renderTx();
+};
+
+window.loadTx = async () => {
+  try{ const s=await getDocs(query(collection(db,'transacoes'),orderBy('criadoEm','desc'),limit(50))); _tx=s.docs.map(d=>({id:d.id,...d.data()})); renderTx(); toast('Atualizado','ok'); }catch(e){toast('Erro: '+e.message,'er');}
+};
+
+function renderTx(){
+  const el=document.getElementById('txList');
+  if(!_tx.length){ el.innerHTML='<div class="empty"><div class="empty-ic">💳</div><div class="empty-tx">Nenhuma transação ainda</div></div>'; return; }
+  el.innerHTML=_tx.map(t=>{
+    const icon=t.status==='aprovado'?'✅':t.status==='pendente'?'⏳':'❌';
+    const bg=t.status==='aprovado'?'rgba(34,197,94,.1)':t.status==='pendente'?'rgba(249,115,22,.1)':'rgba(239,68,68,.1)';
+    const subInfo=[t.tipo==='pix'?'PIX':t.tipo||'—',fmtDT(t.criadoEm),t.plano||'—',t.cupomCodigo?`🎟 ${t.cupomCodigo}`:''].filter(Boolean).join(' · ');
+    return `<div class="txrow"><div class="txicon" style="background:${bg}">${icon}</div><div class="txinfo"><div class="txname">${t.userName||t.userEmail||'—'}</div><div class="txsub">${subInfo}</div></div><div class="txval" style="color:${t.status==='aprovado'?'var(--green)':t.status==='pendente'?'var(--orange)':'var(--red)'}">${t.valor?'R$ '+parseFloat(t.valor).toFixed(2).replace('.',','):'—'}</div></div>`;
+  }).join('');
+}
+
+// ── NOTIFICAÇÕES ──
+window.selTarget = (t,el) => { _notifTarget=t; document.querySelectorAll('.ntab').forEach(x=>x.classList.remove('on')); el.classList.add('on'); };
+window.enviarNotif = async () => {
+  const titulo=document.getElementById('nTitulo').value.trim();
+  const msg=document.getElementById('nMsg').value.trim();
+  const tipo=document.getElementById('nTipo').value;
+  if(!titulo||!msg){ toast('Preencha título e mensagem','er'); return; }
+
+  // Item 6 — segmentos calculados localmente com os mesmos critérios dos
+  // filtros/badges da lista de usuários (plataforma, push, versão)
+  const vPub=_latestUpdate?.versionCode||0;
+  const segFn={
+    todos:        ()=>_users,
+    trial:        ()=>_users.filter(u=>u.plano==='trial'),
+    ativos:       ()=>_users.filter(u=>u.status==='ativo'&&u.plano!=='trial'),
+    plataforma99: ()=>_users.filter(u=>!!u.plataforma99Ativa),
+    taxsee:       ()=>_users.filter(u=>!u.plataforma99Ativa),
+    semPush:      ()=>_users.filter(u=>!u.fcmToken),
+    desatualizado:()=>_users.filter(u=>{ const vA=u.deviceInfo?.versionCode||0; return vPub>0&&vA>0&&vA<vPub; }),
+    selecionados: ()=>_users.filter(u=>_sel.has(u.uid))
+  };
+  const alvo = (segFn[_notifTarget]||segFn.todos)();
+  const qtd  = alvo.length;
+
+  if(_notifTarget==='selecionados' && qtd===0){
+    toast('Nenhum usuário selecionado na lista — marque usuários na aba Usuários primeiro','er');
+    return;
+  }
+  if(!confirm(`Enviar notificação para ${qtd} usuário(s)?`)) return;
+
+  try{
+    const notif={titulo,mensagem:msg,tipo,destinatarios:_notifTarget,total:qtd,lidas:0,criadoEm:Timestamp.now(),criadoPor:auth.currentUser?.email||'admin'};
+    // Pra segmentos que a Cloud Function não consegue recalcular sozinha
+    // no backend (ex: "selecionados" é uma escolha manual, não uma regra),
+    // mandamos a lista exata de UIDs junto no documento.
+    if(_notifTarget==='selecionados' || _notifTarget==='plataforma99' || _notifTarget==='taxsee' ||
+       _notifTarget==='semPush' || _notifTarget==='desatualizado'){
+      notif.uidsEspecificos = alvo.map(u=>u.uid);
+    }
+    await addDoc(collection(db,'notificacoes'),notif);
+    await auditLog('enviar_notificacao',{titulo,destinatarios:_notifTarget,total:qtd});
+    _notifs.unshift({id:'new',...notif});
+    document.getElementById('nTitulo').value=''; document.getElementById('nMsg').value='';
+    renderNotifs(); toast(`Notificação enviada para ${qtd} usuários!`,'ok');
+  }catch(e){toast('Erro: '+e.message,'er');}
+};
+window.loadNotifs = async () => {
+  try{ const s=await getDocs(query(collection(db,'notificacoes'),orderBy('criadoEm','desc'),limit(30))); _notifs=s.docs.map(d=>({id:d.id,...d.data()})); renderNotifs(); }catch(e){toast('Erro: '+e.message,'er');}
+};
+window.renderNotifs = () => {
+  const el=document.getElementById('notifList');
+  if(!_notifs.length){ el.innerHTML='<div class="empty"><div class="empty-ic">📭</div><div class="empty-tx">Nenhuma notificação enviada</div></div>'; return; }
+  const icons={info:'ℹ️',promo:'🎁',alerta:'⚠️',atualizacao:'🔄'};
+  const tgtLbl={todos:'Todos',trial:'Trial',ativos:'Ativos',plataforma99:'🟡 Usa 99',taxsee:'🔵 Usa Taxsee',semPush:'🔕 Sem push',desatualizado:'⚠️ Desatualizados',selecionados:'👆 Selecionados'};
+  el.innerHTML=_notifs.map(n=>`
+    <div class="ncard">
+      <div class="ncard-hd"><div style="display:flex;align-items:center;gap:6px"><span>${icons[n.tipo]||'📢'}</span><div class="ntitle">${n.titulo}</div></div>
+      ${_adminRole!=='suporte'?`<button onclick="delNotif('${n.id}')" style="background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer">🗑</button>`:''}</div>
+      <div class="nmsg">${n.mensagem}</div>
+      <div class="nfoot"><span class="badge ${n.destinatarios==='todos'?'bo':n.destinatarios==='trial'?'bb':'bg'}">${tgtLbl[n.destinatarios]||n.destinatarios}</span><span class="badge bx">👥 ${n.total||0}</span><span class="ndate">${fmtDT(n.criadoEm)}</span></div>
+    </div>`).join('');
+};
+window.delNotif = async id => {
+  if(_adminRole==='suporte'){ toast('Suporte não pode deletar notificações','wa'); return; }
+  if(!confirm('Deletar notificação?')) return;
+  try{ await deleteDoc(doc(db,'notificacoes',id)); _notifs=_notifs.filter(n=>n.id!==id); renderNotifs(); toast('Deletada','ok'); }catch(e){toast('Erro: '+e.message,'er');}
+};
+
+// ── CONFIG / MANUTENÇÃO / VERSÃO ──
+function applyConfig(){
+  const maint=!!_appCfg.manutencao;
+  document.getElementById('maintBanner').classList.toggle('show',maint);
+  document.getElementById('toggleMaint').classList.toggle('on',maint);
+  document.getElementById('maintMsg').value=_appCfg.mensagemManutencao||'';
+  document.getElementById('versaoAtual').textContent=_appCfg.versaoMinima||'—';
+  document.getElementById('novaVersao').value=_appCfg.versaoMinima||'';
+  document.getElementById('versaoMsg').value=_appCfg.mensagemVersao||'';
+  if(maint){ document.getElementById('nd6').classList.add('on'); document.getElementById('maintCard').style.borderColor='var(--red)'; }
+  else{ document.getElementById('maintCard').style.borderColor=''; }
+}
+
+window.toggleMaintenance = async () => {
+  if(_adminRole==='suporte'){ toast('Suporte não pode ativar manutenção','wa'); return; }
+  const novo=!_appCfg.manutencao;
+  if(novo&&!confirm('Ativar manutenção? Todos os usuários verão tela de aviso!')) return;
+  try{
+    await setDoc(doc(db,'config','app'),{..._appCfg,manutencao:novo,updatedAt:Timestamp.now()},{merge:true});
+    _appCfg.manutencao=novo; applyConfig(); checkAlerts();
+    await auditLog(novo?'ativar_manutencao':'desativar_manutencao',{});
+    toast(novo?'🔴 Manutenção ATIVADA!':'✅ Manutenção desativada',novo?'er':'ok');
+  }catch(e){toast('Erro: '+e.message,'er');}
+};
+window.desativarManutencao = () => { if(_appCfg.manutencao) toggleMaintenance(); };
+window.salvarMensagemMaint = async () => {
+  const msg=document.getElementById('maintMsg').value.trim();
+  try{ await setDoc(doc(db,'config','app'),{..._appCfg,mensagemManutencao:msg,updatedAt:Timestamp.now()},{merge:true}); _appCfg.mensagemManutencao=msg; toast('Mensagem salva!','ok'); }catch(e){toast('Erro: '+e.message,'er');}
+};
+window.salvarVersao = async () => {
+  if(_adminRole==='suporte'){ toast('Suporte não pode alterar versão','wa'); return; }
+  const v=parseInt(document.getElementById('novaVersao').value);
+  if(!v||v<1){ toast('Versão inválida','er'); return; }
+  try{
+    await setDoc(doc(db,'config','app'),{..._appCfg,versaoMinima:v,updatedAt:Timestamp.now()},{merge:true});
+    _appCfg.versaoMinima=v; applyConfig();
+    await auditLog('alterar_versao_minima',{versao:v});
+    toast('Versão mínima salva: '+v,'ok');
+  }catch(e){toast('Erro: '+e.message,'er');}
+};
+window.salvarMensagemVersao = async () => {
+  const msg=document.getElementById('versaoMsg').value.trim();
+  try{ await setDoc(doc(db,'config','app'),{..._appCfg,mensagemVersao:msg,updatedAt:Timestamp.now()},{merge:true}); _appCfg.mensagemVersao=msg; toast('Mensagem salva!','ok'); }catch(e){toast('Erro: '+e.message,'er');}
+};
+
+window.renderConfig = () => {
+  const el=document.getElementById('cfgCuponsList');
+  el.innerHTML=!_cupons.length?'<div class="empty" style="padding:20px"><div class="empty-ic">🎟️</div><div class="empty-tx">Nenhum cupom</div></div>':
+    _cupons.map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2)">
+      <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:var(--gold);flex:1">${c.codigo}</div>
+      <span class="badge ${c.ativo!==false?'bg':'br'}">${c.ativo!==false?'Ativo':'Inativo'}</span>
+      <span class="badge bx">${c.usosAtual||0}usos</span>
+      <div class="toggle ${c.ativo!==false?'on':''}" onclick="togCupom('${c.id}')"></div>
+      ${_adminRole!=='suporte'?`<button onclick="delCupom('${c.id}')" style="background:none;border:none;color:var(--dim);font-size:16px;cursor:pointer">🗑</button>`:''}
+    </div>`).join('');
+
+  const devEl=document.getElementById('deviceStats');
+  const withDev=_users.filter(u=>u.deviceInfo);
+  if(!withDev.length){ devEl.innerHTML='<div style="font-size:12px;color:var(--dim);padding:8px 0">Nenhum dispositivo registrado ainda.</div>'; return; }
+  const brands={},androids={};
+  withDev.forEach(u=>{ const b=u.deviceInfo.brand||'Outro'; brands[b]=(brands[b]||0)+1; const a=u.deviceInfo.androidVersion||'?'; androids[a]=(androids[a]||0)+1; });
+  const topBrands=Object.entries(brands).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const topAndroids=Object.entries(androids).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  devEl.innerHTML=`
+    <div style="font-size:11px;color:var(--dim);margin-bottom:8px">${withDev.length} de ${_users.length} usuários com dados de dispositivo</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:6px">Marcas</div>
+    ${topBrands.map(([b,n])=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0"><span style="flex:1;font-size:12px">${b}</span><div style="flex:2;height:4px;background:var(--bg4);border-radius:2px"><div style="height:100%;background:var(--gold);border-radius:2px;width:${Math.round(n/withDev.length*100)}%"></div></div><span style="font-size:12px;color:var(--dim);min-width:20px;text-align:right">${n}</span></div>`).join('')}
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:10px 0 6px">Android</div>
+    ${topAndroids.map(([v,n])=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0"><span style="flex:1;font-size:12px">Android ${v}</span><div style="flex:2;height:4px;background:var(--bg4);border-radius:2px"><div style="height:100%;background:var(--blue);border-radius:2px;width:${Math.round(n/withDev.length*100)}%"></div></div><span style="font-size:12px;color:var(--dim);min-width:20px;text-align:right">${n}</span></div>`).join('')}`;
+};
+
+// ── ADMINS (gestão RBAC) ──
+async function loadAdmins() {
+  if(_adminRole!=='master') return;
+  try {
+    const snap=await getDocs(collection(db,'admins'));
+    const el=document.getElementById('adminList');
+    if(!snap.docs.length){ el.innerHTML='<div class="empty" style="padding:16px"><div class="empty-ic">👥</div><div class="empty-tx">Nenhum admin configurado</div></div>'; return; }
+    el.innerHTML=snap.docs.map(d=>{
+      const data=d.data();
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2)">
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">${d.id}</div><span class="badge ${data.role==='master'?'bo':'bb'}">${data.role==='master'?'👑 Master':'🎧 Suporte'}</span></div>
+        ${d.id!==_adminEmail?`<button onclick="delAdmin('${d.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px">🗑</button>`:'<span style="font-size:11px;color:var(--dim)">você</span>'}
+      </div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+window.salvarNovoAdmin = async () => {
+  if(_adminRole!=='master'){ toast('Apenas master pode criar admins','er'); return; }
+  const email=document.getElementById('naEmail').value.trim().toLowerCase();
+  const role=document.getElementById('naRole').value;
+  if(!email||!email.includes('@')){ toast('Email inválido','er'); return; }
+  try{
+    await setDoc(doc(db,'admins',email),{role,criadoEm:Timestamp.now(),criadoPor:_adminEmail});
+    await auditLog('criar_admin',{email,role});
+    closeSheets(); loadAdmins(); toast(`Admin ${email} criado!`,'ok');
+  }catch(e){ toast('Erro: '+e.message,'er'); }
+};
+
+window.delAdmin = async email => {
+  if(!confirm(`Remover admin ${email}?`)) return;
+  try{
+    await deleteDoc(doc(db,'admins',email));
+    await auditLog('remover_admin',{email});
+    loadAdmins(); toast('Admin removido','ok');
+  }catch(e){ toast('Erro','er'); }
+};
+
+// ── CUPONS ──
+window.updCF = () => { const t=document.getElementById('cTipo').value; document.getElementById('cDF').style.display=t==='dias_gratis'?'block':'none'; document.getElementById('cDescF').style.display=t==='desconto'?'block':'none'; };
+window.saveCupom = async () => {
+  if(_adminRole==='suporte'){ toast('Suporte não pode criar cupons','wa'); return; }
+  const cod=document.getElementById('cCod').value.trim().toUpperCase();
+  if(!cod){ toast('Informe o código','er'); return; }
+  const tipo=document.getElementById('cTipo').value;
+  const d={codigo:cod,tipo,limite:parseInt(document.getElementById('cLim').value)||0,usosAtual:0,descricao:document.getElementById('cDesc2').value.trim(),ativo:true,criadoEm:Timestamp.now()};
+  if(tipo==='dias_gratis') d.dias=parseInt(document.getElementById('cDias').value)||30;
+  if(tipo==='desconto') d.desconto=parseInt(document.getElementById('cDesc').value)||50;
+  const v=document.getElementById('cVal').value; if(v) d.validade=Timestamp.fromDate(new Date(v));
+  try{
+    await setDoc(doc(db,'cupons',cod),d); _cupons.push({id:cod,...d});
+    await auditLog('criar_cupom',{codigo:cod,tipo});
+    renderConfig(); closeSheets(); toast('Cupom '+cod+' criado!','ok');
+  }catch(e){toast('Erro: '+e.message,'er');}
+};
+window.togCupom = async id => {
+  const c=_cupons.find(x=>x.id===id); if(!c) return;
+  const novo=c.ativo===false;
+  try{ await updateDoc(doc(db,'cupons',id),{ativo:novo}); c.ativo=novo; renderConfig(); toast(novo?'Ativado':'Desativado','ok'); }catch(e){toast('Erro','er');}
+};
+window.delCupom = async id => {
+  if(_adminRole==='suporte'){ toast('Suporte não pode deletar cupons','wa'); return; }
+  if(!confirm(`Deletar "${id}"?`)) return;
+  try{ await deleteDoc(doc(db,'cupons',id)); _cupons=_cupons.filter(c=>c.id!==id); renderConfig(); toast('Deletado','ok'); }catch(e){toast('Erro','er');}
+};
+
+// ── UPDATES ──
+window.publicarUpdate = async () => {
+  if(_adminRole==='suporte'){ toast('Suporte não pode publicar atualizações','wa'); return; }
+  const apkUrl=document.getElementById('upApkUrl').value.trim();
+  const versionCode=parseInt(document.getElementById('upVersionCode').value);
+  const versionName=document.getElementById('upVersionName').value.trim();
+  const titulo=document.getElementById('upTitulo').value.trim();
+  const descricao=document.getElementById('upDescricao').value.trim();
+  const tamanho=parseFloat(document.getElementById('upTamanho').value)||0;
+  const obrigatoria=document.getElementById('toggleObrigat').classList.contains('on');
+  const statusEl=document.getElementById('urlStatus');
+  if(!apkUrl){ toast('Cole a URL do APK','er'); return; }
+  if(!apkUrl.startsWith('http')){ toast('URL inválida','er'); return; }
+  if(!apkUrl.endsWith('.apk')){ statusEl.style.display='block'; statusEl.style.color='var(--orange)'; statusEl.textContent='⚠️ A URL não termina em .apk — verifique se é o link direto.'; }
+  else{ statusEl.style.display='none'; }
+  if(!versionCode||versionCode<1){ toast('Informe o versionCode','er'); return; }
+  if(!versionName){ toast('Informe o versionName','er'); return; }
+  if(!titulo){ toast('Informe o título','er'); return; }
+  if(!descricao){ toast('Informe as novidades','er'); return; }
+  const btn=document.getElementById('btnPublicarUpdate');
+  btn.disabled=true; btn.textContent='Publicando...';
+  try{
+    const dadosUpdate={versionCode,versionName,titulo,descricao,obrigatoria,tamanhoMb:tamanho,apkUrl,criadoEm:Timestamp.now(),criadoPor:auth.currentUser?.email||'admin'};
+    await setDoc(doc(db,'updates','latest'),dadosUpdate);
+    await addDoc(collection(db,'updates_historico'),dadosUpdate);
+    await auditLog('publicar_update',{versionCode,versionName,obrigatoria});
+    document.getElementById('upApkUrl').value=''; document.getElementById('upVersionCode').value='';
+    document.getElementById('upVersionName').value=''; document.getElementById('upTitulo').value='';
+    document.getElementById('upDescricao').value=''; document.getElementById('upTamanho').value='';
+    document.getElementById('toggleObrigat').classList.remove('on'); statusEl.style.display='none';
+    toast('✅ Atualização publicada!','ok'); carregarVersaoPublicada(); carregarHistoricoUpdates();
+  }catch(e){ toast('Erro ao publicar: '+e.message,'er'); }
+  finally{ btn.disabled=false; btn.textContent='🚀 Publicar atualização'; }
+};
+
+// Item 8 — Adoção de versão: agrupa os usuários pelo versionCode instalado
+// (deviceInfo.versionCode), comparando com a versão publicada mais recente.
+function renderAdocaoVersao(){
+  const el = document.getElementById('adocaoVersaoInfo');
+  if(!el) return;
+  const comDevice = _users.filter(u => u.deviceInfo && u.deviceInfo.versionCode);
+  if(!comDevice.length){
+    el.innerHTML = '<div style="font-size:12px;color:var(--dim)">Nenhum usuário com informação de versão ainda.</div>';
+    return;
+  }
+  const contagem = {};
+  comDevice.forEach(u => {
+    const v = u.deviceInfo.versionCode;
+    contagem[v] = (contagem[v]||0) + 1;
+  });
+  const vPub = _latestUpdate?.versionCode || 0;
+  const total = comDevice.length;
+  const linhas = Object.entries(contagem)
+    .sort((a,b) => Number(b[0]) - Number(a[0]))
+    .map(([versao, qtd]) => {
+      const pct = ((qtd/total)*100).toFixed(0);
+      const atualizado = vPub>0 && Number(versao) >= vPub;
+      const cor = atualizado ? 'var(--green)' : 'var(--orange)';
+      return `<div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+          <span>build ${versao} ${atualizado?'✅':''}</span>
+          <span style="color:${cor};font-weight:700">${qtd} (${pct}%)</span>
+        </div>
+        <div style="background:var(--bg3);border-radius:6px;height:6px;overflow:hidden">
+          <div style="background:${cor};height:100%;width:${pct}%"></div>
+        </div>
+      </div>`;
+    }).join('');
+  el.innerHTML = `<div style="font-size:10px;color:var(--dim);margin-bottom:10px">${total} usuário${total>1?'s':''} com dado de versão registrado</div>${linhas}`;
+}
+
+async function carregarVersaoPublicada(){
+  try{
+    const d=await getDoc(doc(db,'updates','latest'));
+    const el=document.getElementById('versaoPublicadaInfo');
+    if(!d.exists()){ el.innerHTML='<div style="font-size:13px;color:var(--dim);padding:8px 0">Nenhuma versão publicada ainda.</div>'; return; }
+    const u=d.data();
+    el.innerHTML=`
+      <div class="detail-row"><span class="dl">Versão</span><span class="dv" style="font-family:'DM Mono',monospace;color:var(--gold)">v${u.versionName} (code ${u.versionCode})</span></div>
+      <div class="detail-row"><span class="dl">Título</span><span class="dv">${u.titulo||'—'}</span></div>
+      <div class="detail-row"><span class="dl">Obrigatória</span><span class="dv">${u.obrigatoria?'<span class="badge br">Sim</span>':'<span class="badge bg">Não</span>'}</span></div>
+      <div class="detail-row"><span class="dl">Tamanho</span><span class="dv">${u.tamanhoMb?u.tamanhoMb+' MB':'—'}</span></div>
+      <div class="detail-row"><span class="dl">Publicada em</span><span class="dv">${fmtDT(u.criadoEm)}</span></div>
+      <div style="margin-top:10px"><button class="btn-sm btn-outline" onclick="despublicarUpdate()" style="color:var(--red);border-color:rgba(239,68,68,.3)">🗑 Remover versão publicada</button></div>`;
+  }catch(e){ console.error(e); }
+}
+
+window.despublicarUpdate = async () => {
+  if(!confirm('Remover a versão publicada?')) return;
+  try{ await deleteDoc(doc(db,'updates','latest')); carregarVersaoPublicada(); toast('Versão removida.','ok'); }catch(e){ toast('Erro: '+e.message,'er'); }
+};
+
+window.carregarHistoricoUpdates = async () => {
+  try{
+    const snap=await getDocs(query(collection(db,'updates_historico'),orderBy('criadoEm','desc'),limit(10)));
+    const el=document.getElementById('historicoUpdates');
+    if(snap.empty){ el.innerHTML='<div class="empty"><div class="empty-ic">📦</div><div class="empty-tx">Nenhuma versão no histórico</div></div>'; return; }
+    el.innerHTML=snap.docs.map(d=>{
+      const u=d.data();
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border2)">
+        <div style="width:44px;height:44px;border-radius:12px;background:var(--gold-dim);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📦</div>
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">v${u.versionName} <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)">(${u.versionCode})</span></div><div style="font-size:11px;color:var(--dim);margin-top:2px">${fmtDT(u.criadoEm)}</div></div>
+        ${u.obrigatoria?'<span class="badge br">Obrigatória</span>':'<span class="badge bg">Opcional</span>'}
+        <a href="${u.apkUrl}" target="_blank" class="btn-sm btn-outline" style="text-decoration:none;font-size:11px">⬇️</a>
+      </div>`;
+    }).join('');
+  }catch(e){ console.error(e); }
+};
+
+// ── AUDITORIA ──
+window.loadAuditLogs = async () => {
+  try{
+    const snap=await getDocs(query(collection(db,'adminLogs'),orderBy('timestamp','desc'),limit(50)));
+    _auditLogs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const el=document.getElementById('auditList');
+    const icones={
+      editar_usuario:'✏️',bloquear_usuario:'🚫',liberar_usuario:'✅',
+      adicionar_dias:'📅',adicionar_dias_lote:'📦',bloquear_em_lote:'🚫',
+      exportar_csv:'⬇️',enviar_notificacao:'📨',publicar_update:'🚀',
+      ativar_manutencao:'🔴',desativar_manutencao:'✅',alterar_versao_minima:'📱',
+      criar_admin:'👑',remover_admin:'🗑️',criar_cupom:'🎟️',logout:'🚪',
+      salvar_notas:'📝',
+    };
+    el.innerHTML=!_auditLogs.length
+      ? '<div class="empty"><div class="empty-ic">📋</div><div class="empty-tx">Nenhuma ação registrada ainda</div></div>'
+      : _auditLogs.map(log=>`
+          <div class="log-row">
+            <div class="log-icon" style="background:var(--gold-dim)">${icones[log.acao]||'⚙️'}</div>
+            <div class="log-info">
+              <div class="log-acao">${log.acao?.replace(/_/g,' ')}</div>
+              <div class="log-meta">${log.adminEmail||'—'} · <span class="badge ${log.adminRole==='master'?'bo':'bb'}" style="font-size:8px;padding:2px 5px">${log.adminRole}</span> · ${tempoRelativo(log.timestamp)}</div>
+              ${log.dados&&Object.keys(log.dados).length?`<div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--dim);margin-top:3px">${JSON.stringify(log.dados).substring(0,80)}${JSON.stringify(log.dados).length>80?'…':''}</div>`:''}
+            </div>
+          </div>`).join('');
+  }catch(e){ document.getElementById('auditList').innerHTML=`<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-tx">${e.message}</div></div>`; }
+};
+
+// ── WEBHOOKS MONITOR ──
+window.loadWebhooks = async () => {
+  try{
+    // Tenta ler coleção de webhooks, se existir
+    const snap=await getDocs(query(collection(db,'webhooks'),orderBy('criadoEm','desc'),limit(20)));
+    const el=document.getElementById('webhookList');
+    if(snap.empty){ el.innerHTML='<div class="empty"><div class="empty-ic">🔌</div><div class="empty-tx">Nenhum webhook recebido ainda</div></div>'; return; }
+    el.innerHTML=snap.docs.map(d=>{
+      const w=d.data();
+      const status=w.type==='payment'?'💳':w.action==='payment.created'?'🆕':'📥';
+      return `<div class="wh-row">
+        <div class="wh-time">${fmtDT(w.criadoEm)} · ${w.action||'—'}</div>
+        <div>${JSON.stringify(w,null,2).substring(0,200)}...</div>
+        <div class="wh-status">${status}</div>
+      </div>`;
+    }).join('');
+  }catch(e){ document.getElementById('webhookList').innerHTML='<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-tx">Coleção webhooks não encontrada — configure o endpoint no Mercado Pago</div></div>'; }
+};
+
+// ── HEALTH CHECK ──
+window.checkHealth = async () => {
+  const setH=(id,dot,txt,cls)=>{ const el=document.getElementById(id); if(el)el.textContent=txt; const row=el?.closest('.health-row'); if(row){ const d=row.querySelector('.health-dot'); if(d){d.className='health-dot';d.classList.add(cls);} } };
+
+  // Firebase Auth
+  try{
+    const t0=Date.now();
+    await auth.currentUser?.reload();
+    const ms=Date.now()-t0;
+    setH('h-auth',null,`OK · ${ms}ms`,'h-ok');
+  }catch(e){ setH('h-auth',null,'Erro','h-err'); }
+
+  // Firestore
+  try{
+    const t0=Date.now();
+    await getDoc(doc(db,'config','app'));
+    const ms=Date.now()-t0;
+    setH('h-fs',null,`OK · ${ms}ms`,'h-ok');
+  }catch(e){ setH('h-fs',null,'Erro: '+e.message,'h-err'); }
+
+  // APK URL
+  try{
+    const upDoc=await getDoc(doc(db,'updates','latest'));
+    if(upDoc.exists()&&upDoc.data().apkUrl){ setH('h-apk',null,`v${upDoc.data().versionName} disponível`,'h-ok'); }
+    else{ setH('h-apk',null,'Nenhuma versão publicada','h-warn'); }
+  }catch(e){ setH('h-apk',null,'Erro ao verificar','h-err'); }
+};
+
+
+// ── SETUP WIZARD — primeira configuração da coleção admins ──
+function mostrarSetupWizard(email) {
+  document.getElementById('sApp').style.display = 'none';
+  document.getElementById('sLogin').style.display = 'none';
+
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px;z-index:9999';
+  el.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:32px 24px;max-width:400px;width:100%;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">🔧</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--gold);margin-bottom:8px">Configuração inicial</div>
+      <div style="font-size:13px;color:var(--dim);margin-bottom:20px;line-height:1.6">
+        A coleção <code style="background:var(--bg3);padding:2px 6px;border-radius:6px">admins</code> ainda não existe no Firestore.<br><br>
+        Crie o seguinte documento manualmente no <strong style="color:var(--text)">Firebase Console</strong>:
+      </div>
+      <div style="background:var(--bg3);border-radius:12px;padding:16px;text-align:left;font-family:'DM Mono',monospace;font-size:12px;margin-bottom:20px;border:1px solid var(--border)">
+        <div style="color:var(--dim);margin-bottom:4px">Coleção:</div>
+        <div style="color:var(--gold);margin-bottom:10px">admins</div>
+        <div style="color:var(--dim);margin-bottom:4px">ID do documento:</div>
+        <div style="color:var(--text);margin-bottom:10px;word-break:break-all">${email}</div>
+        <div style="color:var(--dim);margin-bottom:4px">Campos:</div>
+        <div style="color:var(--green)">role: "master"</div>
+        <div style="color:var(--dim)">criadoEm: (Timestamp)</div>
+      </div>
+      <a href="https://console.firebase.google.com/project/fluxoapp-painel/firestore" target="_blank"
+         style="display:block;background:var(--gold);color:#000;border-radius:12px;padding:13px;font-weight:700;text-decoration:none;font-size:14px;margin-bottom:10px">
+        🔗 Abrir Firebase Console
+      </a>
+      <button onclick="window.location.reload()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px;font-size:13px;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif">
+        ↻ Já criei — recarregar
+      </button>
+    </div>
+  `;
+  document.body.appendChild(el);
+}
+
+window.loadAll=loadAll;
+window.renderUsers=renderUsers;
+</script>
+</body>
+</html>
